@@ -6,7 +6,7 @@ int main (int argc, char** argv) {
     // Input arguments
     int word_length;
     int num_rounds = 7;
-    char* file_name = "/Users/gva/Desktop/CHW/L11_Examples/words.txt";
+    char* filename = getFullPath("data/words.txt");
     // Check if arguments were provided
     if (argc > 1) {
         word_length = atoi(argv[1]);
@@ -17,15 +17,15 @@ int main (int argc, char** argv) {
         num_rounds = atoi(argv[2]);
     }
     if (argc > 3) {
-        file_name = argv[3];
+        filename = argv[3];
     }
     // Print input arguments
     printf("Word length: %d\n", word_length);
     printf("Number of rounds: %d\n", num_rounds);
-    printf("Path to dictionary: %s\n", file_name);
+    printf("Path to dictionary: %s\n", filename);
 
     int totalWords;
-    char** words = readLinesFromFile(file_name, &totalWords, word_length);
+    char** words = readLinesFromFile(filename, &totalWords, word_length);
 
     int player_wins = 0;
     int program_wins = 0;
