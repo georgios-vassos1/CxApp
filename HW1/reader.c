@@ -1,5 +1,26 @@
 #include "reader.h"
 
+char* getFullPath(const char* filename) {
+    // Allocate memory for the full path
+    char* full_path = (char*)malloc(MAX_PATH_LENGTH * sizeof(char));
+    if (full_path == NULL) {
+        perror("Error: Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Get the current working directory
+    if (getcwd(full_path, MAX_PATH_LENGTH) == NULL) {
+        perror("Error: Unable to get current working directory");
+        exit(EXIT_FAILURE);
+    }
+
+    // Concatenate cwd with the filename
+    strcat(full_path, "/");
+    strcat(full_path, filename);
+
+    return full_path;
+}
+
 char** readLinesFromFile(const char* filename, int* totalWords, const int wordLength) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {

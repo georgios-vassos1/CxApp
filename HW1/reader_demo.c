@@ -10,7 +10,10 @@ int main(int argc, char *argv[]) {
     } else {
         word_length = NO_WORD_LENGTH_CONDITION; // Use default value if no argument is provided
     }
-    char** words = readLinesFromFile("/Users/gva/Desktop/CHW/L11_Examples/words.txt", &totalWords, word_length);
+    char*  filename = getFullPath("data/words.txt");
+    // Print file name
+    printf("File name: %s\n", filename);
+    char** words = readLinesFromFile(filename, &totalWords, word_length);
 
     // for (int i = 0; i < totalWords; i++) {
     //     printf("%s\n", words[i]);
