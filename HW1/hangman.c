@@ -25,9 +25,8 @@ void play_game(char *word, const int num_rounds, int *player_wins, int *program_
     guessed_letters[0] = '\0';
     int cur_round = 0;
 
-    printf("\n== ROUND %d/%d ==\n\n", cur_round + 1, num_rounds);
-
     while (cur_round < num_rounds) {
+        printf("\n== ROUND %d/%d ==\n\n", cur_round + 1, num_rounds);
         printf("Used letters: %s\n", guessed_letters);
 
         char unused_letters[ALPHABET_SIZE + 1];
@@ -73,6 +72,9 @@ void play_game(char *word, const int num_rounds, int *player_wins, int *program_
         }
         cur_round++;
     }
+
+    printf("\nWord: ");
+    print_word(word, guessed_letters);
 
     printf("\nYou lost! The word is %s.\n", word);
     (*program_wins)++;
