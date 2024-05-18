@@ -4,6 +4,7 @@
 
 #include "linked_list.h"
 
+
 // Function to create a new node
 Node* createNode(char *word, int num_reviews, int sum_ratings) {
     Node* newNode = (Node*)malloc(sizeof(Node));
