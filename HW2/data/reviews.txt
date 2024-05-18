@@ -1,0 +1,5 @@
+"Dune", "Brown", "An epic and spectacular sci-fi allegory with mass appeal", 3.5
+"Inception", "John", "Spectacular visual effects and mind-bending story!", 9.0
+"The Shawshank Redemption", "Alice", "A timeless classic that never gets old.", 10.0
+"The Godfather", "Bob", "An epic crime drama with unforgettable characters.", 10.0
+"Pulp Fiction", "Emily", "Quirky and engaging, a masterpiece of non-linear storytelling.", 9.0
