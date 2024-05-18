@@ -1,5 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "reader.h"
 #include "equivx.h"
+
 
 int compareCodes(int* code1, int* code2, int length) {
     for (int i = 0; i < length; i++) {
@@ -47,7 +53,7 @@ void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* co
         (*numGroups)++;
         *groups = (EquivalenceClass*) realloc(*groups, (*numGroups) * sizeof(EquivalenceClass));
         if (*groups == NULL) {
-            printf("Memory allocation failed.\n");
+            printf("Err1: Memory allocation failed.\n");
             exit(1);
         }
         (*groups)[*numGroups - 1].numInstances = 1;
@@ -68,7 +74,7 @@ EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int w
     for (int i = 1; i < totalWords; i++) {
         int* code = generateCode(words[i], word_length, letter);
         if (code == NULL) {
-            printf("Memory allocation failed.\n");
+            printf("Err2: Memory allocation failed.\n");
             exit(1);
         }
         updateEquivalenceClasses(&groups, numGroups, code, word_length);

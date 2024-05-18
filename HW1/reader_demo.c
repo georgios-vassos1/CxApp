@@ -1,5 +1,10 @@
-#include "reader.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h> // Just for demonstration
+
+#include "reader.h"
+
 
 int main(int argc, char *argv[]) {
     int totalWords;

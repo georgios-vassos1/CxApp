@@ -1,4 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "reader.h"
+
 
 char* getFullPath(const char* filename) {
     // Allocate memory for the full path

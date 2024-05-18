@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "reader.h"
 #include "equivx.h"
 
@@ -11,7 +15,8 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         word_length = atoi(argv[1]);
     } else {
-        word_length = NO_WORD_LENGTH_CONDITION; // Use default value if no argument is provided
+        word_length = 7; // Use default value if no argument is provided
+        printf("No word length provided. Using default value of %d.\n", word_length);
     }
     if (argc > 2) {
         num_rounds = atoi(argv[2]);

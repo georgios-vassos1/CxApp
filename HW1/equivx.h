@@ -1,9 +1,6 @@
 #ifndef EQUIVX_H
 #define EQUIVX_H
 
-// Include necessary libraries
-#include <stdlib.h>
-
 // Define EquivalenceClass struct
 typedef struct {
     int* code;
@@ -20,4 +17,3 @@ EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int w
 void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups);
 
 #endif // EQUIVX_H
-
