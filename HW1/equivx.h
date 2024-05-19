@@ -12,7 +12,7 @@ typedef struct {
 int compareCodes(int* code1, int* code2, int length);
 int compareEqClasses(const void *a, const void *b);
 int* generateCode(char* word, int word_length, char* letter);
-void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, int word_length);
+void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, char* word);
 EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, char* letter, int* numGroups);
 void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups);
 

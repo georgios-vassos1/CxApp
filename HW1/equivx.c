@@ -39,11 +39,15 @@ int* generateCode(char* word, int word_length, char* letter) {
 }
 
 // Function to update equivalence classes
-void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, int word_length) {
+void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, char* word) {
+    int word_length = strlen(word);
+
     int found = 0;
     for (int j = 0; j < *numGroups; j++) {
         if (compareCodes((*groups)[j].code, code, word_length)) {
             (*groups)[j].numInstances++;
+            (*groups)[j].words = (char**) realloc((*groups)[j].words, (*groups)[j].numInstances * sizeof(char*));
+            (*groups)[j].words[(*groups)[j].numInstances - 1] = strdup(word);
             found = 1;
             break;
         }
@@ -53,11 +57,20 @@ void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* co
         (*numGroups)++;
         *groups = (EquivalenceClass*) realloc(*groups, (*numGroups) * sizeof(EquivalenceClass));
         if (*groups == NULL) {
-            printf("Err1: Memory allocation failed.\n");
+            printf("Err11: Memory allocation failed.\n");
             exit(1);
         }
-        (*groups)[*numGroups - 1].numInstances = 1;
         (*groups)[*numGroups - 1].code = code;
+        (*groups)[*numGroups - 1].numInstances = 1;
+        (*groups)[*numGroups - 1].words = (char**) malloc(sizeof(char*));
+        // (*groups)[*numGroups - 1].words[0] = (char*) malloc((word_length + 1) * sizeof(char));
+        // strcpy((*groups)[*numGroups - 1].words[0], word);
+        (*groups)[*numGroups - 1].words[0] = strdup(word);
+        // Ensure proper error handling in a real-world scenario:
+        if ((*groups)[*numGroups - 1].words[0] == NULL) {
+            printf("Err12: Memory allocation failed.\n");
+            exit(1);
+        }
     } else {
         free(code);
     }
@@ -77,7 +90,7 @@ EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int w
             printf("Err2: Memory allocation failed.\n");
             exit(1);
         }
-        updateEquivalenceClasses(&groups, numGroups, code, word_length);
+        updateEquivalenceClasses(&groups, numGroups, code, words[i]);
     }
 
     qsort(groups, *numGroups, sizeof(EquivalenceClass), compareEqClasses);
@@ -89,6 +102,10 @@ EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int w
 void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups) {
     for (int i = 0; i < numGroups; i++) {
         free(groups[i].code);
+        for (int j = 0; j < groups[i].numInstances; j++) {
+            free(groups[i].words[j]);
+        }
+        free(groups[i].words);
     }
     free(groups);
 }
