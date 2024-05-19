@@ -46,6 +46,12 @@ int main(int argc, char** argv) {
     int numGroups;
     EquivalenceClass* groups = generateEquivalenceClasses(words, totalWords, word_length, letter, &numGroups);
 
+    // Print words in group 2
+    // printf("Words in group 2:\n");
+    // for (int i = 0; i < groups[1].numInstances; i++) {
+    //     printf("%s\n", groups[1].words[i]);
+    // }
+
     // int numGroups = 0;
     // EquivalenceClass* groups = (EquivalenceClass*) malloc(sizeof(EquivalenceClass));
     // groups[0].code = (int*) calloc(word_length, sizeof(int));
