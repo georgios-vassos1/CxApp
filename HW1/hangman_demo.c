@@ -56,6 +56,12 @@ int main (int argc, char** argv) {
     
     printf("Thank you for playing!\n");
 
+    // Free allocated memory
+    for (int i = 0; i < totalWords; i++) {
+        free(words[i]);
+    }
+    free(words);
+
     return 0;
 }
 
