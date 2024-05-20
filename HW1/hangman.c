@@ -31,6 +31,7 @@ void play_game(char *word, const int num_rounds, int *player_wins, int *program_
     char guessed_letters[num_rounds + 1];
     guessed_letters[0] = '\0';
     int cur_round = 0;
+    int correct_guesses = 0;
 
     while (cur_round < num_rounds) {
         printf("\n== ROUND %d/%d ==\n\n", cur_round + 1, num_rounds);
@@ -70,9 +71,11 @@ void play_game(char *word, const int num_rounds, int *player_wins, int *program_
         
         if (strchr(word, guess) == NULL) {
             printf("Wrong guess! You have %d guesses left.\n", num_rounds - cur_round);
+        } else {
+            correct_guesses++;
         }
 
-        if (strcmp(word, guessed_letters) == 0) {
+        if (correct_guesses == strlen(word)) {
             printf("\nYou won! The word is %s.\n", word);
             (*player_wins)++;
             return;
