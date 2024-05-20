@@ -15,5 +15,8 @@ int* generateCode(char* word, int word_length, char* letter);
 void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, char* word);
 EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, char* letter, int* numGroups);
 void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups);
+char** copyWords(char **words, int numWords);
+void printWords(char** words, int numWords);
+void freeWords(char** words, int numWords);
 
 #endif // EQUIVX_H
