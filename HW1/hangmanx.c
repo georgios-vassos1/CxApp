@@ -38,12 +38,13 @@ void play_game_x(char **words, int totalWords, const int num_rounds, int *player
     int idx = rand() % totalWords;
     char *word = strdup(words[idx]); // Important: Create copy of word, not pointer to word
 
-    // Print word
-    printf("Word: %s\n", word);
+    // View solution (DEBUG)
+    // printf("Word: %s\n", word);
     int word_length = strlen(word);
 
     int tmp_totalWords = totalWords;
     char **tmp_words = copyWords(words, totalWords);
+
     int numGroups;
     EquivalenceClass* groups = NULL;
     while (cur_round < num_rounds) {
@@ -93,17 +94,17 @@ void play_game_x(char **words, int totalWords, const int num_rounds, int *player
 
         if (groups != NULL) {
             // Choose one word at random from the first group
-            int wordIdx = rand() % groups[1].numInstances;
-            strcpy(word, groups[1].words[wordIdx]);
+            // int wordIdx = rand() % groups[1].numInstances;
+            // strcpy(word, groups[1].words[wordIdx]);
         }
 
         if (strchr(word, guess) == NULL) {
             printf("Wrong guess! You have %d guesses left.\n", num_rounds - cur_round);
         } else {
             correct_guesses++;
-            freeWords(tmp_words, tmp_totalWords);
-            tmp_words = copyWords(groups[1].words, groups[1].numInstances);
-            tmp_totalWords = groups[1].numInstances;
+            // freeWords(tmp_words, tmp_totalWords);
+            // tmp_words = copyWords(groups[1].words, groups[1].numInstances);
+            // tmp_totalWords = groups[1].numInstances;
         }
 
         // Free memory
