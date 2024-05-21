@@ -11,9 +11,9 @@ typedef struct {
 // Function prototypes
 int compareCodes(int* code1, int* code2, int length);
 int compareEqClasses(const void *a, const void *b);
-int* generateCode(char* word, int word_length, char* letter);
-void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, char* word);
-EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, char* letter, int* numGroups);
+int* generateCode(const char* word, int word_length, const char* letter);
+void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, const char* word);
+EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, const char* letter, int* numGroups);
 void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups);
 char** copyWords(char **words, int numWords);
 void printWords(char** words, int numWords);

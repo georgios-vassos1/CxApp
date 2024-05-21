@@ -24,101 +24,73 @@ int compareEqClasses(const void *a, const void *b) {
 }
 
 // Function to generate code for a word based on a letter
-int* generateCode(char* word, int word_length, char* letter) {
+int* generateCode(const char* word, int word_length, const char* letter) {
     int* code = (int*) calloc(word_length, sizeof(int));
+    if (code == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
     for (int j = 0; j < word_length; j++) {
-        int k = 0;
-        while (letter[k] != '\0') {
+        for (int k = 0; letter[k] != '\0'; k++) {
             if (word[j] == letter[k]) {
                 code[j] = k + 1;
+                break;
             }
-            k++;
         }
     }
     return code;
 }
 
 // Function to update equivalence classes
-void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, char* word) {
+void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, const char* word) {
     int word_length = strlen(word);
 
-    int found = 0;
     for (int j = 0; j < *numGroups; j++) {
         if (compareCodes((*groups)[j].code, code, word_length)) {
             (*groups)[j].numInstances++;
             (*groups)[j].words = (char**) realloc((*groups)[j].words, (*groups)[j].numInstances * sizeof(char*));
             if ((*groups)[j].words == NULL) {
-                printf("Err01: Memory allocation failed.\n");
-                exit(1);
+                perror("Memory allocation failed");
+                exit(EXIT_FAILURE);
             }
             (*groups)[j].words[(*groups)[j].numInstances - 1] = strdup(word);
             if ((*groups)[j].words[(*groups)[j].numInstances - 1] == NULL) {
-                printf("Err02: Memory allocation failed.\n");
-                exit(1);
+                perror("Memory allocation failed");
+                exit(EXIT_FAILURE);
             }
-            found = 1;
-            break;
+            free(code);
+            return;
         }
     }
 
-    if (!found) {
-        (*numGroups)++;
-        *groups = (EquivalenceClass*) realloc(*groups, (*numGroups) * sizeof(EquivalenceClass));
-        if (*groups == NULL) {
-            printf("Err11: Memory allocation failed.\n");
-            exit(1);
-        }
-        (*groups)[*numGroups - 1].code = code;
-        (*groups)[*numGroups - 1].numInstances = 1;
-        (*groups)[*numGroups - 1].words = (char**) malloc(sizeof(char*));
-        if ((*groups)[*numGroups - 1].words == NULL) {
-            printf("Err12: Memory allocation failed.\n");
-            exit(1);
-        }
-        // (*groups)[*numGroups - 1].words[0] = (char*) malloc((word_length + 1) * sizeof(char));
-        // strcpy((*groups)[*numGroups - 1].words[0], word);
-        (*groups)[*numGroups - 1].words[0] = strdup(word);
-        if ((*groups)[*numGroups - 1].words[0] == NULL) {
-            printf("Err13: Memory allocation failed.\n");
-            exit(1);
-        }
-    } else {
-        free(code);
+    (*numGroups)++;
+    *groups = (EquivalenceClass*) realloc(*groups, (*numGroups) * sizeof(EquivalenceClass));
+    if (*groups == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    (*groups)[*numGroups - 1].code = code;
+    (*groups)[*numGroups - 1].numInstances = 1;
+    (*groups)[*numGroups - 1].words = (char**) malloc(sizeof(char*));
+    if ((*groups)[*numGroups - 1].words == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    (*groups)[*numGroups - 1].words[0] = strdup(word);
+    if ((*groups)[*numGroups - 1].words[0] == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
     }
 }
 
 // Function to generate equivalence classes for words
-EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, char* letter, int* numGroups) {
+EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, const char* letter, int* numGroups) {
     *numGroups = 0;
-    EquivalenceClass* groups = (EquivalenceClass*) malloc(sizeof(EquivalenceClass));
-    if (groups == NULL) {
-        printf("Err21: Memory allocation failed.\n");
-        exit(1);
-    }
-    groups[0].code = generateCode(words[0], word_length, letter);
-    if (groups[0].code == NULL) {
-        printf("Err22: Memory allocation failed.\n");
-        exit(1);
-    }
-    groups[0].numInstances = 1;
-    (*numGroups)++;
-    groups[0].words = (char**) malloc(sizeof(char*));
-    if (groups[0].words == NULL) {
-        printf("Err23: Memory allocation failed.\n");
-        exit(1);
-    }
-    groups[0].words[0] = strdup(words[0]);
-    if (groups[0].words[0] == NULL) {
-        printf("Err24: Memory allocation failed.\n");
-        exit(1);
-    }
+    EquivalenceClass* groups = NULL;
 
-    for (int i = 1; i < totalWords; i++) {
+    for (int i = 0; i < totalWords; i++) {
         int* code = generateCode(words[i], word_length, letter);
-        if (code == NULL) {
-            printf("Err25: Memory allocation failed.\n");
-            exit(1);
-        }
         updateEquivalenceClasses(&groups, numGroups, code, words[i]);
     }
 
@@ -133,12 +105,12 @@ void printWords(char** words, int numWords) {
     }
 }
 
-// Function to copy strings from one groupect to a temporary array
+// Function to copy strings from one group to a temporary array
 char** copyWords(char **words, int numWords) {
     char **tmp = (char**)malloc(numWords * sizeof(char*));
     if (tmp == NULL) {
         perror("Failed to allocate temporary array");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     for (int i = 0; i < numWords; i++) {
         tmp[i] = strdup(words[i]);
@@ -149,7 +121,7 @@ char** copyWords(char **words, int numWords) {
                 free(tmp[j]);
             }
             free(tmp);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
     return tmp;
