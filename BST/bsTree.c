@@ -30,19 +30,15 @@ Node* insert(Node* node, int key) {
     return node;
 }
 
-// Non-recursive insert function using a stack
+// Non-recursive insert function
 Node* insertIterative(Node* root, int key) {
     Node* newNode = createNode(key);
     if (root == NULL) {
         return newNode;
     }
 
-    Stack stack;
-    initStack(&stack, sizeof(Node*));
     Node* current = root;
-
     while (current != NULL) {
-        push(&stack, &current);
         if (key < current->key) {
             if (current->left == NULL) {
                 current->left = newNode;
@@ -58,7 +54,6 @@ Node* insertIterative(Node* root, int key) {
         }
     }
 
-    freeStack(&stack);
     return root;
 }
 
@@ -115,6 +110,32 @@ void inorder(Node* root) {
         inorder(root->right);
     }
 }
+
+// Iterative inorder traversal
+void iterativeInorder(Node* root) {
+    if (root == NULL)
+        return;
+
+    Stack stack;
+    initStack(&stack, sizeof(Node*));
+
+    Node* current = root;
+
+    while (current != NULL || !isEmpty(&stack)) {
+        while (current != NULL) {
+            push(&stack, &current);
+            current = current->left;
+        }
+
+        current = *((Node**)pop(&stack));
+        printf("%d ", current->key);
+
+        current = current->right;
+    }
+
+    freeStack(&stack);
+}
+
 
 // Recursive preorder traversal
 void preorder(Node* root) {
