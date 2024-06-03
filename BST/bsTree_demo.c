@@ -22,8 +22,18 @@ int main() {
     root = insertIterative(root, 5);
     root = insertIterative(root, 7);
 
+    // Inorder traversal of the BST
+    printf("Inorder traversal of the BST:\n");
+    inorderIterative(root);
+    printf("\n\n");
+
     // Print the BST
     printf("Binary Search Tree:\n");
+    printTree(root, 0, "Root: ");
+
+    // Delete a node from the BST
+    root = deleteNode(root, 2);
+    printf("\nBinary Search Tree after deleting 2:\n");
     printTree(root, 0, "Root: ");
 
     // Free the memory used by the BST

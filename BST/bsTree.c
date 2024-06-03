@@ -112,7 +112,7 @@ void inorder(Node* root) {
 }
 
 // Iterative inorder traversal
-void iterativeInorder(Node* root) {
+void inorderIterative(Node* root) {
     if (root == NULL)
         return;
 

@@ -1,0 +1,18 @@
+* Interaction between Server and Client
+
+** Server Setup
+   - The server initializes a socket and binds it to a specified port.
+   - It listens for incoming connections from clients.
+
+** Client Connection
+   - The client establishes a connection to the server by specifying the server's IP address and port number.
+
+** Data Exchange
+   - Once the connection is established, the client sends a message to the server.
+   - The server receives the message from the client.
+   - Upon receiving the message, the server processes it (in this case, simply printing it).
+   - The server then sends a response back to the client, acknowledging the message receipt.
+
+** Connection Termination
+   - After the data exchange is complete, both the client and server close their respective sockets, terminating the connection.
+
