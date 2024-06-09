@@ -1,3 +1,0 @@
-Hello from pipe1
-Hello from pipe2
-Hello from pipex

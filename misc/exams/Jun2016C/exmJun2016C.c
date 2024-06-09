@@ -14,7 +14,6 @@
 // Function to handle SIGINT signal in the child process
 void handle_sigint(int sig) {
     printf("Child: Received SIGINT\n");
-    fflush(stdout);
 
     // Open the file for reading
     int fd = open("output.txt", O_RDONLY);
@@ -84,7 +83,6 @@ int main(int argc, char *argv[]) {
     if (pid == 0) {
         // Child process
         printf("Child: Waiting for SIGINT\n");
-        fflush(stdout);
         signal(SIGINT, handle_sigint);
 
         // Wait for SIGINT signal
@@ -101,14 +99,12 @@ int main(int argc, char *argv[]) {
             if (bytes_read1 > 0) {
                 write(file_fd, buffer, bytes_read1);
                 printf("Parent: Read %zd bytes from pipe1\n", bytes_read1);
-                fflush(stdout);
             }
 
             bytes_read2 = read(fd2, buffer, BUFFER_SIZE);
             if (bytes_read2 > 0) {
                 write(file_fd, buffer, bytes_read2);
                 printf("Parent: Read %zd bytes from pipe2\n", bytes_read2);
-                fflush(stdout);
             }
 
             // Check if both pipes are closed
