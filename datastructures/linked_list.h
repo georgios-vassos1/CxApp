@@ -1,18 +1,17 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
-// Structure for list node
-typedef struct Node {
+typedef struct ListNode {
     char *word;
     int num_reviews;
     int sum_ratings;
-    struct Node *prev;
-    struct Node *next;
-} Node;
+    struct ListNode *prev;
+    struct ListNode *next;
+} ListNode;
 
-Node* createNode(char *word, int num_reviews, int sum_ratings);
-void insertEnd(Node **head, char *word, int num_reviews, int sum_ratings);
-void displayList(Node *head);
-void freeList(Node **head);
+ListNode* list_create_node(const char *word, int num_reviews, int sum_ratings);
+void list_insert_end(ListNode **head, const char *word, int num_reviews, int sum_ratings);
+void list_display(const ListNode *head);
+void list_free(ListNode **head);
 
 #endif // LINKED_LIST_H

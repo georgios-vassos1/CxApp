@@ -1,41 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "stack.h"
 
-
-// Main function to demonstrate the stack with integer data
-int main() {
+int main(void) {
     Stack stack;
-    initStack(&stack, sizeof(int));
+    stack_init(&stack, sizeof(int));
 
-    // Push integers onto the stack
     int value1 = 10;
     int value2 = 20;
     int value3 = 30;
-    push(&stack, &value1);
-    push(&stack, &value2);
-    push(&stack, &value3);
+    stack_push(&stack, &value1);
+    stack_push(&stack, &value2);
+    stack_push(&stack, &value3);
 
-    // Pop and print integer values from the stack
-    int *poppedValue = (int *)pop(&stack);
+    int *poppedValue = (int *)stack_pop(&stack);
     printf("Popped: %d\n", *poppedValue);
-    free(poppedValue); // Free the popped value
+    free(poppedValue);
 
-    poppedValue = (int *)pop(&stack);
+    poppedValue = (int *)stack_pop(&stack);
     printf("Popped: %d\n", *poppedValue);
-    free(poppedValue); // Free the popped value
+    free(poppedValue);
 
-    // Push another integer
     int value4 = 40;
-    push(&stack, &value4);
+    stack_push(&stack, &value4);
 
-    // Print the value of the top integer
-    int *topValue = (int *)peek(&stack);
+    int *topValue = (int *)stack_peek(&stack);
     printf("Top element: %d\n", *topValue);
 
-    // Free the stack memory
-    freeStack(&stack);
+    stack_free(&stack);
 
     return 0;
 }

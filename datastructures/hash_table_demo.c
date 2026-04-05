@@ -1,34 +1,24 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "hash_table.h"
 
+int main(void) {
+    HashTable *ht = ht_init(INIT_HSIZE);
 
-int main() {
-    // Initialize the hash table with initial size INIT_HSIZE
-    HashTable *hashTable = initHashTable(INIT_HSIZE);
+    ht_insert(ht, "example", 1, 2);
+    ht_insert(ht, "test", 1, 5);
+    ht_insert(ht, "list", 1, 4);
 
-    // Example usage:
-    insertRecord(hashTable, "example", 1, 2);
-    insertRecord(hashTable, "test", 1, 5);
-    insertRecord(hashTable, "list", 1, 4);
+    // Insert with an existing word (updates running average)
+    ht_insert(ht, "example", 1, 4);
 
-    // Insert a record with an existing word
-    insertRecord(hashTable, "example", 1, 4);
+    ht_print(ht);
 
-    // Print the hash table
-    printHashTable(hashTable);
+    ht_delete(ht, "test");
+    ht_insert(ht, "list", 1, 5);
 
-    // Delete a record
-    deleteRecord(hashTable, "test");
-    insertRecord(hashTable, "list", 1, 5);
+    ht_print(ht);
 
-    // Print the hash table after deleting a record
-    printHashTable(hashTable);
-
-    // Free memory allocated for the hash table
-    freeHashTable(hashTable);
+    ht_free(ht);
 
     return 0;
 }

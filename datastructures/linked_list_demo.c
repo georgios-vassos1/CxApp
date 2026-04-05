@@ -1,27 +1,16 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "linked_list.h"
 
-int main() {
-    Node *head = NULL; // Initialize an empty list
+int main(void) {
+    ListNode *head = NULL;
 
-    // Create the sentinel node
-    head = createNode("", 0, 0);
-    head->next = head; // Make it circular
-    head->prev = head; // Make it circular
+    list_insert_end(&head, "example", 5, 20);
+    list_insert_end(&head, "test", 3, 15);
+    list_insert_end(&head, "list", 8, 30);
 
-    // Example usage:
-    insertEnd(&head, "example", 5, 20);
-    insertEnd(&head, "test", 3, 15);
-    insertEnd(&head, "list", 8, 30);
+    list_display(head);
 
-    // Display the list
-    displayList(head);
-
-    // Free memory allocated for the list
-    freeList(&head);
+    list_free(&head);
 
     return 0;
 }

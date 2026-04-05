@@ -1,43 +1,39 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "stack.h"
 #include "bsTree.h"
 
-
-// Create a new node
-Node* createNode(int key) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
+BSTNode* bst_create_node(int key) {
+    BSTNode *newNode = malloc(sizeof(BSTNode));
     if (!newNode) {
         fprintf(stderr, "Memory allocation error\n");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
     newNode->key = key;
     newNode->left = newNode->right = NULL;
     return newNode;
 }
 
-// Function to insert a new node with given key in BST
-Node* insert(Node* node, int key) {
+// Recursive insert (ignores duplicates)
+BSTNode* bst_insert(BSTNode *node, int key) {
     if (node == NULL) {
-        return createNode(key);
+        return bst_create_node(key);
     }
     if (key < node->key) {
-        node->left = insert(node->left, key);
+        node->left = bst_insert(node->left, key);
     } else if (key > node->key) {
-        node->right = insert(node->right, key);
+        node->right = bst_insert(node->right, key);
     }
     return node;
 }
 
-// Non-recursive insert function
-Node* insertIterative(Node* root, int key) {
-    Node* newNode = createNode(key);
-    if (root == NULL) {
+// Iterative insert (ignores duplicates)
+BSTNode* bst_insert_iter(BSTNode *root, int key) {
+    BSTNode *newNode = bst_create_node(key);
+    if (root == NULL)
         return newNode;
-    }
 
-    Node* current = root;
+    BSTNode *current = root;
     while (current != NULL) {
         if (key < current->key) {
             if (current->left == NULL) {
@@ -45,130 +41,241 @@ Node* insertIterative(Node* root, int key) {
                 break;
             }
             current = current->left;
-        } else {
+        } else if (key > current->key) {
             if (current->right == NULL) {
                 current->right = newNode;
                 break;
             }
             current = current->right;
+        } else {
+            free(newNode);
+            break;
         }
     }
 
     return root;
 }
 
-// Function to search a given key in BST
-Node* search(Node* root, int key) {
+// Recursive search
+BSTNode* bst_search(BSTNode *root, int key) {
     if (root == NULL || root->key == key) {
         return root;
     }
     if (key < root->key) {
-        return search(root->left, key);
+        return bst_search(root->left, key);
     }
-    return search(root->right, key);
+    return bst_search(root->right, key);
 }
 
-Node* minValueNode(Node* node) {
-    Node* current = node;
+// Iterative search
+BSTNode* bst_search_iter(BSTNode *root, int key) {
+    while (root != NULL && root->key != key) {
+        if (key < root->key)
+            root = root->left;
+        else
+            root = root->right;
+    }
+    return root;
+}
+
+static BSTNode* min_value_node(BSTNode *node) {
+    BSTNode *current = node;
     while (current && current->left != NULL) {
         current = current->left;
     }
     return current;
 }
 
-// Function to delete the node with given key in BST
-Node* deleteNode(Node* root, int key) {
+// Recursive delete
+BSTNode* bst_delete(BSTNode *root, int key) {
     if (root == NULL) {
         return root;
     }
     if (key < root->key) {
-        root->left = deleteNode(root->left, key);
+        root->left = bst_delete(root->left, key);
     } else if (key > root->key) {
-        root->right = deleteNode(root->right, key);
+        root->right = bst_delete(root->right, key);
     } else {
         if (root->left == NULL) {
-            Node* temp = root->right;
+            BSTNode *temp = root->right;
             free(root);
             return temp;
         } else if (root->right == NULL) {
-            Node* temp = root->left;
+            BSTNode *temp = root->left;
             free(root);
             return temp;
         }
-        Node* temp = minValueNode(root->right);
+        BSTNode *temp = min_value_node(root->right);
         root->key = temp->key;
-        root->right = deleteNode(root->right, temp->key);
+        root->right = bst_delete(root->right, temp->key);
     }
     return root;
 }
 
-// Recursive inorder traversal
-void inorder(Node* root) {
+// Iterative delete
+BSTNode* bst_delete_iter(BSTNode *root, int key) {
+    BSTNode *parent = NULL;
+    BSTNode *current = root;
+
+    while (current != NULL && current->key != key) {
+        parent = current;
+        if (key < current->key)
+            current = current->left;
+        else
+            current = current->right;
+    }
+
+    if (current == NULL)
+        return root;
+
+    // Two children: replace with inorder successor
+    if (current->left != NULL && current->right != NULL) {
+        BSTNode *successorParent = current;
+        BSTNode *successor = current->right;
+        while (successor->left != NULL) {
+            successorParent = successor;
+            successor = successor->left;
+        }
+        current->key = successor->key;
+        current = successor;
+        parent = successorParent;
+    }
+
+    // At most one child
+    BSTNode *child = (current->left != NULL) ? current->left : current->right;
+
+    if (parent == NULL) {
+        free(current);
+        return child;
+    }
+
+    if (parent->left == current)
+        parent->left = child;
+    else
+        parent->right = child;
+
+    free(current);
+    return root;
+}
+
+// Recursive traversals
+void bst_inorder(const BSTNode *root) {
     if (root != NULL) {
-        inorder(root->left);
+        bst_inorder(root->left);
         printf("%d ", root->key);
-        inorder(root->right);
+        bst_inorder(root->right);
+    }
+}
+
+void bst_preorder(const BSTNode *root) {
+    if (root != NULL) {
+        printf("%d ", root->key);
+        bst_preorder(root->left);
+        bst_preorder(root->right);
+    }
+}
+
+void bst_postorder(const BSTNode *root) {
+    if (root != NULL) {
+        bst_postorder(root->left);
+        bst_postorder(root->right);
+        printf("%d ", root->key);
     }
 }
 
 // Iterative inorder traversal
-void inorderIterative(Node* root) {
+void bst_inorder_iter(const BSTNode *root) {
     if (root == NULL)
         return;
 
     Stack stack;
-    initStack(&stack, sizeof(Node*));
+    stack_init(&stack, sizeof(const BSTNode *));
 
-    Node* current = root;
+    const BSTNode *current = root;
 
-    while (current != NULL || !isEmpty(&stack)) {
+    while (current != NULL || !stack_is_empty(&stack)) {
         while (current != NULL) {
-            push(&stack, &current);
+            stack_push(&stack, &current);
             current = current->left;
         }
 
-        current = *((Node**)pop(&stack));
+        const BSTNode **ptr = stack_pop(&stack);
+        current = *ptr;
+        free(ptr);
         printf("%d ", current->key);
 
         current = current->right;
     }
 
-    freeStack(&stack);
+    stack_free(&stack);
 }
 
+// Iterative preorder traversal
+void bst_preorder_iter(const BSTNode *root) {
+    if (root == NULL)
+        return;
 
-// Recursive preorder traversal
-void preorder(Node* root) {
-    if (root != NULL) {
-        printf("%d ", root->key);
-        preorder(root->left);
-        preorder(root->right);
+    Stack stack;
+    stack_init(&stack, sizeof(const BSTNode *));
+    stack_push(&stack, &root);
+
+    while (!stack_is_empty(&stack)) {
+        const BSTNode **ptr = stack_pop(&stack);
+        const BSTNode *current = *ptr;
+        free(ptr);
+        printf("%d ", current->key);
+        if (current->right != NULL)
+            stack_push(&stack, &current->right);
+        if (current->left != NULL)
+            stack_push(&stack, &current->left);
     }
+
+    stack_free(&stack);
 }
 
-// Recursive postorder traversal
-void postorder(Node* root) {
-    if (root != NULL) {
-        postorder(root->left);
-        postorder(root->right);
-        printf("%d ", root->key);
+// Iterative postorder traversal (two-stack approach)
+void bst_postorder_iter(const BSTNode *root) {
+    if (root == NULL)
+        return;
+
+    Stack s1, s2;
+    stack_init(&s1, sizeof(const BSTNode *));
+    stack_init(&s2, sizeof(const BSTNode *));
+
+    stack_push(&s1, &root);
+    while (!stack_is_empty(&s1)) {
+        const BSTNode **ptr = stack_pop(&s1);
+        const BSTNode *current = *ptr;
+        free(ptr);
+        stack_push(&s2, &current);
+        if (current->left != NULL)
+            stack_push(&s1, &current->left);
+        if (current->right != NULL)
+            stack_push(&s1, &current->right);
     }
+
+    while (!stack_is_empty(&s2)) {
+        const BSTNode **ptr = stack_pop(&s2);
+        printf("%d ", (*ptr)->key);
+        free(ptr);
+    }
+
+    stack_free(&s1);
+    stack_free(&s2);
 }
 
-// Free the memory used by the BST
-void freeTree(Node* root) {
+void bst_free(BSTNode *root) {
     if (root != NULL) {
-        freeTree(root->left);
-        freeTree(root->right);
+        bst_free(root->left);
+        bst_free(root->right);
         free(root);
     }
 }
 
-void printTree(Node* root, int level, char* prefix) {
+void bst_print(const BSTNode *root, int level, const char *prefix) {
     if (root != NULL) {
         printf("%*s%s%d\n", level * 4, "", prefix, root->key);
-        printTree(root->left, level + 1, "L-- ");
-        printTree(root->right, level + 1, "R-- ");
+        bst_print(root->left, level + 1, "L-- ");
+        bst_print(root->right, level + 1, "R-- ");
     }
 }
-

@@ -3,39 +3,34 @@
 #include "stack.h"
 #include "bsTree.h"
 
-int main() {
+int main(void) {
     Stack stack;
-    initStack(&stack, sizeof(Node*));
+    stack_init(&stack, sizeof(BSTNode *));
 
-    // Create some tree nodes
-    Node *node1 = createNode(1);
-    Node *node2 = createNode(2);
-    Node *node3 = createNode(3);
+    BSTNode *node1 = bst_create_node(1);
+    BSTNode *node2 = bst_create_node(2);
+    BSTNode *node3 = bst_create_node(3);
 
-    // Push tree nodes onto the stack
-    push(&stack, &node1);
-    push(&stack, &node2);
-    push(&stack, &node3);
+    stack_push(&stack, &node1);
+    stack_push(&stack, &node2);
+    stack_push(&stack, &node3);
 
-    // Pop and print tree node keys from the stack
-    Node **poppedNode = (Node **)pop(&stack);
+    BSTNode **poppedNode = (BSTNode **)stack_pop(&stack);
     printf("Popped: %d\n", (*poppedNode)->key);
+    free(poppedNode);
 
-    poppedNode = (Node **)pop(&stack);
+    poppedNode = (BSTNode **)stack_pop(&stack);
     printf("Popped: %d\n", (*poppedNode)->key);
+    free(poppedNode);
 
-    // Push another tree node
-    Node *node4 = createNode(4);
-    push(&stack, &node4);
+    BSTNode *node4 = bst_create_node(4);
+    stack_push(&stack, &node4);
 
-    // Print the key of the top tree node
-    Node **topNode = (Node **)peek(&stack);
+    BSTNode **topNode = (BSTNode **)stack_peek(&stack);
     printf("Top element: %d\n", (*topNode)->key);
 
-    // Free the stack memory
-    freeStack(&stack);
+    stack_free(&stack);
 
-    // Free the tree nodes
     free(node1);
     free(node2);
     free(node3);

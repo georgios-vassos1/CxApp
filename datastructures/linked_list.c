@@ -4,15 +4,18 @@
 
 #include "linked_list.h"
 
-
-// Function to create a new node
-Node* createNode(char *word, int num_reviews, int sum_ratings) {
-    Node* newNode = (Node*)malloc(sizeof(Node));
+ListNode* list_create_node(const char *word, int num_reviews, int sum_ratings) {
+    ListNode *newNode = malloc(sizeof(ListNode));
     if (newNode == NULL) {
-        printf("Memory allocation failed\n");
-        exit(1);
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
     }
-    newNode->word = strdup(word); // Dynamically allocate memory for word
+    newNode->word = strdup(word);
+    if (newNode->word == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(newNode);
+        exit(EXIT_FAILURE);
+    }
     newNode->num_reviews = num_reviews;
     newNode->sum_ratings = sum_ratings;
     newNode->prev = NULL;
@@ -20,15 +23,14 @@ Node* createNode(char *word, int num_reviews, int sum_ratings) {
     return newNode;
 }
 
-// Function to insert a node at the end of the list
-void insertEnd(Node **head, char *word, int num_reviews, int sum_ratings) {
-    Node *newNode = createNode(word, num_reviews, sum_ratings);
-    if (*head == NULL) { // If list is empty
+void list_insert_end(ListNode **head, const char *word, int num_reviews, int sum_ratings) {
+    ListNode *newNode = list_create_node(word, num_reviews, sum_ratings);
+    if (*head == NULL) {
         *head = newNode;
         (*head)->prev = newNode;
         (*head)->next = newNode;
     } else {
-        Node *last = (*head)->prev; // Last node
+        ListNode *last = (*head)->prev;
         last->next = newNode;
         newNode->prev = last;
         newNode->next = *head;
@@ -36,32 +38,31 @@ void insertEnd(Node **head, char *word, int num_reviews, int sum_ratings) {
     }
 }
 
-// Function to display the list
-void displayList(Node *head) {
+void list_display(const ListNode *head) {
     if (head == NULL) {
         printf("List is empty\n");
         return;
     }
-    Node *temp = head;
+    const ListNode *temp = head;
     do {
-        printf("Word: %s, Num_reviews: %d, Sum_ratings: %d\n", temp->word, temp->num_reviews, temp->sum_ratings);
+        printf("Word: %s, Num_reviews: %d, Sum_ratings: %d\n",
+               temp->word, temp->num_reviews, temp->sum_ratings);
         temp = temp->next;
-    } while(temp != head);
+    } while (temp != head);
 }
 
-// Function to free memory allocated for the list
-void freeList(Node **head) {
+void list_free(ListNode **head) {
     if (*head == NULL)
         return;
-    Node *current = (*head)->next; // Start from the first node
-    Node *next;
-    while (current != *head) { // Iterate until reaching the sentinel node
+    ListNode *current = (*head)->next;
+    ListNode *next;
+    while (current != *head) {
         next = current->next;
-        free(current->word); // Free dynamically allocated word
+        free(current->word);
         free(current);
         current = next;
     }
-    free(*head); // Free the sentinel node
+    free((*head)->word);
+    free(*head);
     *head = NULL;
 }
-
