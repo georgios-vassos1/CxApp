@@ -24,9 +24,9 @@ int main(void) {
     /* Build a small BST just to get some BSTNode pointers */
     BSTree *tree = bst_create(cmp_item, free);
     if (!tree) { fprintf(stderr, "bst_create failed\n"); return 1; }
-    bst_insert(tree, make_item(1));
-    bst_insert(tree, make_item(2));
-    bst_insert(tree, make_item(3));
+    if (bst_insert(tree, make_item(1)) != 0) goto fail;
+    if (bst_insert(tree, make_item(2)) != 0) goto fail;
+    if (bst_insert(tree, make_item(3)) != 0) goto fail;
 
     /* Push BSTNode pointers onto the stack */
     Stack stack;
@@ -37,27 +37,33 @@ int main(void) {
     }
 
     /* Walk the tree manually to get node pointers for the stack demo */
-    BSTNode *n1 = tree->root;               /* key 1 */
-    BSTNode *n2 = tree->root->right;        /* key 2 */
-    BSTNode *n3 = tree->root->right->right; /* key 3 */
+    BSTNode *n1 = bst_root(tree);                       /* key 1 */
+    BSTNode *n2 = bst_node_right(n1);                   /* key 2 */
+    BSTNode *n3 = bst_node_right(n2);                   /* key 3 */
 
-    stack_push(&stack, &n1);
-    stack_push(&stack, &n2);
-    stack_push(&stack, &n3);
+    if (stack_push(&stack, &n1) != 0) goto fail_both;
+    if (stack_push(&stack, &n2) != 0) goto fail_both;
+    if (stack_push(&stack, &n3) != 0) goto fail_both;
 
     BSTNode *popped;
     if (stack_pop(&stack, &popped) == 0)
-        printf("Popped: %d\n", ((Item *)popped->data)->id);
+        printf("Popped: %d\n", ((Item *)bst_node_data(popped))->id);
 
     if (stack_pop(&stack, &popped) == 0)
-        printf("Popped: %d\n", ((Item *)popped->data)->id);
+        printf("Popped: %d\n", ((Item *)bst_node_data(popped))->id);
 
     BSTNode *top;
     if (stack_peek(&stack, &top) == 0)
-        printf("Top element: %d\n", ((Item *)top->data)->id);
+        printf("Top element: %d\n", ((Item *)bst_node_data(top))->id);
 
     stack_free(&stack);
     bst_free(tree);
-
     return 0;
+
+fail_both:
+    stack_free(&stack);
+fail:
+    fprintf(stderr, "operation failed\n");
+    bst_free(tree);
+    return 1;
 }

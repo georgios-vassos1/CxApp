@@ -9,19 +9,8 @@ extern "C" {
 
 #define INIT_HSIZE  16
 
-typedef struct HTEntry {
-    void *data;
-    struct HTEntry *next;
-} HTEntry;
-
-typedef struct HashTable {
-    size_t size;
-    size_t count;
-    HTEntry **buckets;
-    size_t (*hash)(const void *);
-    int    (*cmp)(const void *, const void *);
-    void   (*free_data)(void *);
-} HashTable;
+/* Opaque type — callers use pointers only. */
+typedef struct HashTable HashTable;
 
 HashTable* ht_init(size_t initial_size,
                    size_t (*hash)(const void *),

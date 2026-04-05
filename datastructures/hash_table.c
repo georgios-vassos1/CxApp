@@ -1,8 +1,25 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "hash_table.h"
 #include "cxds_internal.h"
+
+/* ── struct definitions (private) ────────────────────────────────── */
+
+typedef struct HTEntry {
+    void *data;
+    struct HTEntry *next;
+} HTEntry;
+
+struct HashTable {
+    size_t size;
+    size_t count;
+    HTEntry **buckets;
+    size_t (*hash)(const void *);
+    int    (*cmp)(const void *, const void *);
+    void   (*free_data)(void *);
+};
 
 static const double HIGH_LOAD = 0.75;
 static const double LOW_LOAD  = 0.125;   /* wide hysteresis gap vs HIGH_LOAD */
@@ -72,7 +89,7 @@ int ht_insert(HashTable *ht, void *data) {
     ht->count++;
 
     double lf = (double)ht->count / (double)ht->size;
-    if (lf >= HIGH_LOAD)
+    if (lf >= HIGH_LOAD && ht->size <= SIZE_MAX / 2)
         rehash(ht, ht->size * 2);  /* best-effort grow; insert already succeeded */
 
     return 0;

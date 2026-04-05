@@ -4,6 +4,20 @@
 #include "linked_list.h"
 #include "cxds_internal.h"
 
+/* ── struct definitions (private) ────────────────────────────────── */
+
+typedef struct ListNode {
+    void *data;
+    struct ListNode *prev;
+    struct ListNode *next;
+} ListNode;
+
+struct List {
+    ListNode *head;
+    size_t count;
+    void (*free_data)(void *);
+};
+
 List* list_create(void (*free_data)(void *)) {
     List *list = malloc(sizeof(List));
     if (!list) return NULL;

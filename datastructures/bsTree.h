@@ -7,17 +7,9 @@ extern "C" {
 
 #include <stddef.h>
 
-typedef struct BSTNode {
-    void *data;
-    struct BSTNode *left, *right;
-} BSTNode;
-
-typedef struct BSTree {
-    BSTNode *root;
-    size_t count;
-    int (*cmp)(const void *, const void *);
-    void (*free_data)(void *);
-} BSTree;
+/* Opaque types — callers use pointers only. */
+typedef struct BSTNode BSTNode;
+typedef struct BSTree  BSTree;
 
 BSTree* bst_create(int (*cmp)(const void *, const void *),
                    void (*free_data)(void *));
@@ -46,6 +38,12 @@ size_t bst_size(const BSTree *tree);
 void*  bst_min(const BSTree *tree);
 void*  bst_max(const BSTree *tree);
 void** bst_to_array(const BSTree *tree, size_t *out_count);
+
+/* Node accessors — for callers that need to walk the tree structure. */
+BSTNode* bst_root(const BSTree *tree);
+BSTNode* bst_node_left(const BSTNode *node);
+BSTNode* bst_node_right(const BSTNode *node);
+void*    bst_node_data(const BSTNode *node);
 
 void   bst_free(BSTree *tree);
 

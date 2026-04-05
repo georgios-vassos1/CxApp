@@ -4,6 +4,22 @@
 #include "bsTree.h"
 #include "cxds_internal.h"
 
+/* ── struct definitions (private) ────────────────────────────────── */
+
+struct BSTNode {
+    void *data;
+    struct BSTNode *left, *right;
+};
+
+struct BSTree {
+    BSTNode *root;
+    size_t count;
+    int (*cmp)(const void *, const void *);
+    void (*free_data)(void *);
+};
+
+/* ── construction ────────────────────────────────────────────────── */
+
 BSTree* bst_create(int (*cmp)(const void *, const void *),
                    void (*free_data)(void *))
 {
@@ -365,6 +381,24 @@ void** bst_to_array(const BSTree *tree, size_t *out_count) {
     collect_inorder(tree->root, arr, &idx);
     *out_count = idx;
     return arr;
+}
+
+/* ── node accessors ──────────────────────────────────────────────── */
+
+BSTNode* bst_root(const BSTree *tree) {
+    return tree ? tree->root : NULL;
+}
+
+BSTNode* bst_node_left(const BSTNode *node) {
+    return node ? node->left : NULL;
+}
+
+BSTNode* bst_node_right(const BSTNode *node) {
+    return node ? node->right : NULL;
+}
+
+void* bst_node_data(const BSTNode *node) {
+    return node ? node->data : NULL;
 }
 
 /* ── free ────────────────────────────────────────────────────────── */

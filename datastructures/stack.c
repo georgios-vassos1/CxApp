@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "stack.h"
@@ -19,6 +20,7 @@ int stack_is_empty(const Stack *stack) {
 }
 
 static int resize(Stack *stack, size_t newCapacity) {
+    if (newCapacity > SIZE_MAX / stack->elementSize) return -1;
     char *newData = realloc(stack->data, newCapacity * stack->elementSize);
     if (!newData) return -1;
     stack->data = newData;
@@ -29,8 +31,8 @@ static int resize(Stack *stack, size_t newCapacity) {
 int stack_push(Stack *stack, const void *element) {
     if (!stack || !element) return -1;
     if (stack->count == stack->capacity) {
-        if (resize(stack, stack->capacity * 2) != 0)
-            return -1;
+        if (stack->capacity > SIZE_MAX / 2) return -1;
+        if (resize(stack, stack->capacity * 2) != 0) return -1;
     }
     memcpy(stack->data + stack->count * stack->elementSize,
            element, stack->elementSize);

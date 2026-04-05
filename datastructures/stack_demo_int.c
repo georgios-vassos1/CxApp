@@ -12,9 +12,9 @@ int main(void) {
     int value1 = 10;
     int value2 = 20;
     int value3 = 30;
-    stack_push(&stack, &value1);
-    stack_push(&stack, &value2);
-    stack_push(&stack, &value3);
+    if (stack_push(&stack, &value1) != 0) goto fail;
+    if (stack_push(&stack, &value2) != 0) goto fail;
+    if (stack_push(&stack, &value3) != 0) goto fail;
 
     int popped;
     if (stack_pop(&stack, &popped) == 0)
@@ -24,7 +24,7 @@ int main(void) {
         printf("Popped: %d\n", popped);
 
     int value4 = 40;
-    stack_push(&stack, &value4);
+    if (stack_push(&stack, &value4) != 0) goto fail;
 
     int top;
     if (stack_peek(&stack, &top) == 0)
@@ -33,6 +33,10 @@ int main(void) {
     printf("Stack size: %zu\n", stack_size(&stack));
 
     stack_free(&stack);
-
     return 0;
+
+fail:
+    fprintf(stderr, "stack operation failed\n");
+    stack_free(&stack);
+    return 1;
 }
