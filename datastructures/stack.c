@@ -3,53 +3,53 @@
 #include <string.h>
 #include "stack.h"
 
-void stack_init(Stack *stack, size_t elementSize) {
+int stack_init(Stack *stack, size_t elementSize) {
     stack->data = malloc(INITIAL_CAPACITY * sizeof(void *));
     if (stack->data == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        return -1;
     }
     stack->count = 0;
     stack->capacity = INITIAL_CAPACITY;
     stack->elementSize = elementSize;
+    return 0;
 }
 
 bool stack_is_empty(const Stack *stack) {
     return stack->count == 0;
 }
 
-static void resize(Stack *stack, size_t newCapacity) {
+static int resize(Stack *stack, size_t newCapacity) {
     void **newData = realloc(stack->data, newCapacity * sizeof(void *));
     if (newData == NULL) {
-        fprintf(stderr, "Memory reallocation failed\n");
-        exit(EXIT_FAILURE);
+        return -1;
     }
     stack->data = newData;
     stack->capacity = newCapacity;
+    return 0;
 }
 
-void stack_push(Stack *stack, const void *element) {
+int stack_push(Stack *stack, const void *element) {
     if (stack->count == stack->capacity) {
-        resize(stack, stack->capacity * 2);
+        if (resize(stack, stack->capacity * 2) != 0)
+            return -1;
     }
     void *newElement = malloc(stack->elementSize);
     if (newElement == NULL) {
-        fprintf(stderr, "Memory allocation for new element failed\n");
-        exit(EXIT_FAILURE);
+        return -1;
     }
     memcpy(newElement, element, stack->elementSize);
     stack->data[stack->count++] = newElement;
+    return 0;
 }
 
 void *stack_pop(Stack *stack) {
     if (stack->count == 0) {
-        fprintf(stderr, "Stack underflow\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     void *element = stack->data[--stack->count];
 
     if (stack->count > 0 && stack->count <= stack->capacity / 4) {
-        resize(stack, stack->capacity / 2);
+        resize(stack, stack->capacity / 2);  /* best-effort shrink */
     }
 
     return element;
@@ -57,10 +57,13 @@ void *stack_pop(Stack *stack) {
 
 void *stack_peek(const Stack *stack) {
     if (stack->count == 0) {
-        fprintf(stderr, "Stack is empty\n");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
     return stack->data[stack->count - 1];
+}
+
+size_t stack_size(const Stack *stack) {
+    return stack->count;
 }
 
 void stack_free(Stack *stack) {

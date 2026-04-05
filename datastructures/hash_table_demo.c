@@ -38,15 +38,16 @@ static void print_word(const void *d) {
 
 int main(void) {
     HashTable *ht = ht_init(INIT_HSIZE, hash_word, cmp_word, free);
+    if (!ht) { fprintf(stderr, "ht_init failed\n"); return 1; }
 
-    ht_insert(ht, make_word("example", 1, 2.0f));
-    ht_insert(ht, make_word("test",    1, 5.0f));
-    ht_insert(ht, make_word("list",    1, 4.0f));
+    if (ht_insert(ht, make_word("example", 1, 2.0f)) != 0) goto fail;
+    if (ht_insert(ht, make_word("test",    1, 5.0f)) != 0) goto fail;
+    if (ht_insert(ht, make_word("list",    1, 4.0f)) != 0) goto fail;
 
     /* inserting with existing key replaces the old entry */
-    ht_insert(ht, make_word("example", 2, 3.0f));
+    if (ht_insert(ht, make_word("example", 2, 3.0f)) != 0) goto fail;
 
-    printf("After inserts:\n");
+    printf("After inserts (size=%zu):\n", ht_size(ht));
     ht_print(ht, print_word);
 
     /* search */
@@ -55,14 +56,31 @@ int main(void) {
     if (found)
         printf("\nFound: %s %d %.1f\n", found->word, found->num_reviews, found->avg_rating);
 
+    /* ht_keys */
+    size_t nkeys;
+    void **keys = ht_keys(ht, &nkeys);
+    if (keys) {
+        printf("\nKeys (%zu): ", nkeys);
+        for (size_t i = 0; i < nkeys; i++)
+            printf("%s ", ((WordRecord *)keys[i])->word);
+        printf("\n");
+        free(keys);
+    }
+
     /* delete + re-insert */
     WordRecord del = { .word = "test" };
-    ht_delete(ht, &del);
-    ht_insert(ht, make_word("list", 2, 4.5f));
+    if (ht_delete(ht, &del) == 0)
+        printf("\nDeleted 'test'\n");
+    if (ht_insert(ht, make_word("list", 2, 4.5f)) != 0) goto fail;
 
-    printf("\nAfter delete(test) + replace(list):\n");
+    printf("\nAfter delete(test) + replace(list) (size=%zu):\n", ht_size(ht));
     ht_print(ht, print_word);
 
     ht_free(ht);
     return 0;
+
+fail:
+    fprintf(stderr, "insert failed\n");
+    ht_free(ht);
+    return 1;
 }

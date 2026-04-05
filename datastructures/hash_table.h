@@ -1,6 +1,10 @@
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 
 #define INIT_HSIZE  16
@@ -26,10 +30,19 @@ HashTable* ht_init(size_t initial_size,
                    int    (*cmp)(const void *, const void *),
                    void   (*free_data)(void *));
 
-void  ht_insert(HashTable *ht, void *data);
-void* ht_search(const HashTable *ht, const void *probe);
-void  ht_delete(HashTable *ht, const void *probe);
-void  ht_print(const HashTable *ht, void (*print_fn)(const void *));
-void  ht_free(HashTable *ht);
+int    ht_insert(HashTable *ht, void *data);
+void*  ht_search(const HashTable *ht, const void *probe);
+int    ht_delete(HashTable *ht, const void *probe);
+void   ht_print(const HashTable *ht, void (*print_fn)(const void *));
+
+size_t ht_size(const HashTable *ht);
+void** ht_keys(const HashTable *ht, size_t *out_count);
+void   ht_foreach(const HashTable *ht, void (*visitor)(void *data));
+
+void   ht_free(HashTable *ht);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* HASH_TABLE_H */

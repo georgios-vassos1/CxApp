@@ -23,13 +23,18 @@ static Item* make_item(int id) {
 int main(void) {
     /* Build a small BST just to get some BSTNode pointers */
     BSTree *tree = bst_create(cmp_item, free);
+    if (!tree) { fprintf(stderr, "bst_create failed\n"); return 1; }
     bst_insert(tree, make_item(1));
     bst_insert(tree, make_item(2));
     bst_insert(tree, make_item(3));
 
     /* Push BSTNode pointers onto the stack */
     Stack stack;
-    stack_init(&stack, sizeof(BSTNode *));
+    if (stack_init(&stack, sizeof(BSTNode *)) != 0) {
+        fprintf(stderr, "stack_init failed\n");
+        bst_free(tree);
+        return 1;
+    }
 
     /* Walk the tree manually to get node pointers for the stack demo */
     BSTNode *n1 = tree->root;               /* key 1 */
@@ -41,15 +46,20 @@ int main(void) {
     stack_push(&stack, &n3);
 
     BSTNode **popped = (BSTNode **)stack_pop(&stack);
-    printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
-    free(popped);
+    if (popped) {
+        printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
+        free(popped);
+    }
 
     popped = (BSTNode **)stack_pop(&stack);
-    printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
-    free(popped);
+    if (popped) {
+        printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
+        free(popped);
+    }
 
     BSTNode **top = (BSTNode **)stack_peek(&stack);
-    printf("Top element: %d\n", ((Item *)(*top)->data)->id);
+    if (top)
+        printf("Top element: %d\n", ((Item *)(*top)->data)->id);
 
     stack_free(&stack);
     bst_free(tree);

@@ -36,20 +36,21 @@ static void visit_record(const void *d) {
 
 int main(void) {
     BSTree *tree = bst_create(cmp_record, free);
+    if (!tree) { fprintf(stderr, "bst_create failed\n"); return 1; }
 
-    bst_insert_iter(tree, make_record(4, "delta",   4.0));
-    bst_insert_iter(tree, make_record(2, "bravo",   2.0));
-    bst_insert_iter(tree, make_record(6, "foxtrot", 6.0));
-    bst_insert_iter(tree, make_record(1, "alpha",   1.0));
-    bst_insert_iter(tree, make_record(3, "charlie", 3.0));
-    bst_insert_iter(tree, make_record(5, "echo",    5.0));
-    bst_insert_iter(tree, make_record(7, "golf",    7.0));
+    if (bst_insert_iter(tree, make_record(4, "delta",   4.0)) != 0) goto fail;
+    if (bst_insert_iter(tree, make_record(2, "bravo",   2.0)) != 0) goto fail;
+    if (bst_insert_iter(tree, make_record(6, "foxtrot", 6.0)) != 0) goto fail;
+    if (bst_insert_iter(tree, make_record(1, "alpha",   1.0)) != 0) goto fail;
+    if (bst_insert_iter(tree, make_record(3, "charlie", 3.0)) != 0) goto fail;
+    if (bst_insert_iter(tree, make_record(5, "echo",    5.0)) != 0) goto fail;
+    if (bst_insert_iter(tree, make_record(7, "golf",    7.0)) != 0) goto fail;
 
     printf("Inorder traversal of the BST:\n");
     bst_inorder_iter(tree, visit_record);
     printf("\n\n");
 
-    printf("Binary Search Tree:\n");
+    printf("Binary Search Tree (size=%zu):\n", bst_size(tree));
     bst_print(tree, print_record);
 
     /* search */
@@ -58,12 +59,34 @@ int main(void) {
     if (found)
         printf("\nFound key 5: %s %.2f\n", found->name, found->value);
 
+    /* min / max */
+    Record *mn = bst_min(tree);
+    Record *mx = bst_max(tree);
+    if (mn) printf("Min key: %d\n", mn->key);
+    if (mx) printf("Max key: %d\n", mx->key);
+
+    /* to_array */
+    size_t arr_count;
+    void **arr = bst_to_array(tree, &arr_count);
+    if (arr) {
+        printf("Array (%zu): ", arr_count);
+        for (size_t i = 0; i < arr_count; i++)
+            printf("%d ", ((Record *)arr[i])->key);
+        printf("\n");
+        free(arr);
+    }
+
     /* delete */
     Record del = { .key = 2 };
-    bst_delete(tree, &del);
-    printf("\nBinary Search Tree after deleting key 2:\n");
+    if (bst_delete(tree, &del) == 0)
+        printf("\nDeleted key 2 (size=%zu):\n", bst_size(tree));
     bst_print(tree, print_record);
 
     bst_free(tree);
     return 0;
+
+fail:
+    fprintf(stderr, "insert failed\n");
+    bst_free(tree);
+    return 1;
 }

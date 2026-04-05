@@ -1,1 +1,17 @@
+# Build artifacts
+*.o
+*.dylib
+*.so
+
+# Demo binaries
+bsTree_demo
+hash_table_demo
+linked_list_demo
+stack_demo_int
+stack_demo_node
+
+# Legacy prefix
 xx*
+
+# macOS
+.DS_Store
