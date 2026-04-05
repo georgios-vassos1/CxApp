@@ -16,24 +16,19 @@ int main(void) {
     stack_push(&stack, &value2);
     stack_push(&stack, &value3);
 
-    int *poppedValue = (int *)stack_pop(&stack);
-    if (poppedValue) {
-        printf("Popped: %d\n", *poppedValue);
-        free(poppedValue);
-    }
+    int popped;
+    if (stack_pop(&stack, &popped) == 0)
+        printf("Popped: %d\n", popped);
 
-    poppedValue = (int *)stack_pop(&stack);
-    if (poppedValue) {
-        printf("Popped: %d\n", *poppedValue);
-        free(poppedValue);
-    }
+    if (stack_pop(&stack, &popped) == 0)
+        printf("Popped: %d\n", popped);
 
     int value4 = 40;
     stack_push(&stack, &value4);
 
-    int *topValue = (int *)stack_peek(&stack);
-    if (topValue)
-        printf("Top element: %d\n", *topValue);
+    int top;
+    if (stack_peek(&stack, &top) == 0)
+        printf("Top element: %d\n", top);
 
     printf("Stack size: %zu\n", stack_size(&stack));
 

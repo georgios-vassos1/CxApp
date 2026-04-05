@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "linked_list.h"
+#include "cxds_internal.h"
 
 List* list_create(void (*free_data)(void *)) {
     List *list = malloc(sizeof(List));
@@ -22,6 +23,7 @@ static ListNode* create_node(void *data) {
 }
 
 int list_insert_end(List *list, void *data) {
+    if (!list) return -1;
     ListNode *n = create_node(data);
     if (!n) return -1;
     if (list->head == NULL) {
@@ -40,6 +42,7 @@ int list_insert_end(List *list, void *data) {
 }
 
 int list_insert_front(List *list, void *data) {
+    if (!list) return -1;
     ListNode *n = create_node(data);
     if (!n) return -1;
     if (list->head == NULL) {
@@ -61,7 +64,7 @@ int list_insert_front(List *list, void *data) {
 void* list_search(const List *list, const void *probe,
                   int (*cmp)(const void *, const void *))
 {
-    if (list->head == NULL) return NULL;
+    if (!list || !list->head) return NULL;
     const ListNode *cur = list->head;
     do {
         if (cmp(cur->data, probe) == 0)
@@ -74,12 +77,11 @@ void* list_search(const List *list, const void *probe,
 int list_delete(List *list, const void *probe,
                 int (*cmp)(const void *, const void *))
 {
-    if (list->head == NULL) return -1;
+    if (!list || !list->head) return -1;
     ListNode *cur = list->head;
     do {
         if (cmp(cur->data, probe) == 0) {
             if (list->count == 1) {
-                /* last element */
                 list->head = NULL;
             } else {
                 cur->prev->next = cur->next;
@@ -87,7 +89,7 @@ int list_delete(List *list, const void *probe,
                 if (cur == list->head)
                     list->head = cur->next;
             }
-            if (list->free_data) list->free_data(cur->data);
+            free_data_if(list->free_data, cur->data);
             free(cur);
             list->count--;
             return 0;
@@ -98,22 +100,28 @@ int list_delete(List *list, const void *probe,
 }
 
 void* list_get(const List *list, size_t index) {
-    if (index >= list->count) return NULL;
-    const ListNode *cur = list->head;
-    for (size_t i = 0; i < index; i++)
-        cur = cur->next;
+    if (!list || index >= list->count) return NULL;
+    const ListNode *cur;
+    if (index <= list->count / 2) {
+        /* traverse forward from head */
+        cur = list->head;
+        for (size_t i = 0; i < index; i++)
+            cur = cur->next;
+    } else {
+        /* traverse backward from tail */
+        cur = list->head->prev;
+        for (size_t i = list->count - 1; i > index; i--)
+            cur = cur->prev;
+    }
     return cur->data;
 }
 
 size_t list_size(const List *list) {
-    return list->count;
+    return list ? list->count : 0;
 }
 
 void list_display(const List *list, void (*print_fn)(const void *)) {
-    if (list->head == NULL) {
-        printf("List is empty\n");
-        return;
-    }
+    if (!list || !list->head) return;
     const ListNode *cur = list->head;
     do {
         print_fn(cur->data);
@@ -122,15 +130,16 @@ void list_display(const List *list, void (*print_fn)(const void *)) {
 }
 
 void list_free(List *list) {
+    if (!list) return;
     if (list->head) {
         ListNode *cur = list->head->next;
         while (cur != list->head) {
             ListNode *next = cur->next;
-            if (list->free_data) list->free_data(cur->data);
+            free_data_if(list->free_data, cur->data);
             free(cur);
             cur = next;
         }
-        if (list->free_data) list->free_data(list->head->data);
+        free_data_if(list->free_data, list->head->data);
         free(list->head);
     }
     free(list);

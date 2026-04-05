@@ -8,8 +8,6 @@ extern "C" {
 #include <stddef.h>
 
 #define INIT_HSIZE  16
-#define HIGH_LOAD   0.75
-#define LOW_LOAD    0.25
 
 typedef struct HTEntry {
     void *data;
@@ -37,7 +35,7 @@ void   ht_print(const HashTable *ht, void (*print_fn)(const void *));
 
 size_t ht_size(const HashTable *ht);
 void** ht_keys(const HashTable *ht, size_t *out_count);
-void   ht_foreach(const HashTable *ht, void (*visitor)(void *data));
+void   ht_foreach(HashTable *ht, void (*visitor)(void *data));
 
 void   ht_free(HashTable *ht);
 

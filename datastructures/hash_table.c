@@ -2,16 +2,17 @@
 #include <stdlib.h>
 
 #include "hash_table.h"
+#include "cxds_internal.h"
 
-static void free_data_if(void (*free_data)(void *), void *data) {
-    if (free_data) free_data(data);
-}
+static const double HIGH_LOAD = 0.75;
+static const double LOW_LOAD  = 0.125;   /* wide hysteresis gap vs HIGH_LOAD */
 
 HashTable* ht_init(size_t initial_size,
                    size_t (*hash)(const void *),
                    int    (*cmp)(const void *, const void *),
                    void   (*free_data)(void *))
 {
+    if (initial_size == 0) return NULL;
     HashTable *ht = malloc(sizeof(HashTable));
     if (!ht) return NULL;
     ht->buckets = calloc(initial_size, sizeof(HTEntry *));
@@ -48,6 +49,7 @@ static int rehash(HashTable *ht, size_t new_size) {
 }
 
 int ht_insert(HashTable *ht, void *data) {
+    if (!ht) return -1;
     size_t idx = ht->hash(data) % ht->size;
     HTEntry *cur = ht->buckets[idx];
 
@@ -70,14 +72,14 @@ int ht_insert(HashTable *ht, void *data) {
     ht->count++;
 
     double lf = (double)ht->count / (double)ht->size;
-    if (lf >= HIGH_LOAD) {
-        if (rehash(ht, ht->size * 2) != 0)
-            return -1;  /* inserted but resize failed */
-    }
+    if (lf >= HIGH_LOAD)
+        rehash(ht, ht->size * 2);  /* best-effort grow; insert already succeeded */
+
     return 0;
 }
 
 void* ht_search(const HashTable *ht, const void *probe) {
+    if (!ht) return NULL;
     size_t idx = ht->hash(probe) % ht->size;
     HTEntry *cur = ht->buckets[idx];
     while (cur) {
@@ -89,6 +91,7 @@ void* ht_search(const HashTable *ht, const void *probe) {
 }
 
 int ht_delete(HashTable *ht, const void *probe) {
+    if (!ht) return -1;
     size_t idx = ht->hash(probe) % ht->size;
     HTEntry *prev = NULL;
     HTEntry *cur = ht->buckets[idx];
@@ -116,6 +119,7 @@ int ht_delete(HashTable *ht, const void *probe) {
 }
 
 void ht_print(const HashTable *ht, void (*print_fn)(const void *)) {
+    if (!ht) return;
     for (size_t i = 0; i < ht->size; i++) {
         const HTEntry *e = ht->buckets[i];
         while (e) {
@@ -125,21 +129,21 @@ void ht_print(const HashTable *ht, void (*print_fn)(const void *)) {
     }
 }
 
-/* ── new operations ──────────────────────────────────────────────── */
+/* ── accessors ───────────────────────────────────────────────────── */
 
 size_t ht_size(const HashTable *ht) {
-    return ht->count;
+    return ht ? ht->count : 0;
 }
 
 void** ht_keys(const HashTable *ht, size_t *out_count) {
-    if (ht->count == 0) {
-        *out_count = 0;
-        return NULL;
-    }
+    if (!ht || !out_count) return NULL;
+    *out_count = ht->count;
+    if (ht->count == 0)
+        return calloc(1, sizeof(void *));   /* non-NULL ⇒ success (empty) */
     void **arr = malloc(ht->count * sizeof(void *));
     if (!arr) {
         *out_count = 0;
-        return NULL;
+        return NULL;                        /* NULL ⇒ alloc failure */
     }
     size_t k = 0;
     for (size_t i = 0; i < ht->size; i++) {
@@ -153,7 +157,8 @@ void** ht_keys(const HashTable *ht, size_t *out_count) {
     return arr;
 }
 
-void ht_foreach(const HashTable *ht, void (*visitor)(void *data)) {
+void ht_foreach(HashTable *ht, void (*visitor)(void *data)) {
+    if (!ht) return;
     for (size_t i = 0; i < ht->size; i++) {
         HTEntry *e = ht->buckets[i];
         while (e) {
@@ -166,6 +171,7 @@ void ht_foreach(const HashTable *ht, void (*visitor)(void *data)) {
 /* ── free ────────────────────────────────────────────────────────── */
 
 void ht_free(HashTable *ht) {
+    if (!ht) return;
     for (size_t i = 0; i < ht->size; i++) {
         HTEntry *e = ht->buckets[i];
         while (e) {

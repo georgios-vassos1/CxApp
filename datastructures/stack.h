@@ -5,23 +5,20 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
 #include <stddef.h>
 
-#define INITIAL_CAPACITY 2
-
 typedef struct {
-    void **data;
+    char  *data;        /* contiguous buffer, elementSize * capacity bytes */
     size_t count;
     size_t capacity;
     size_t elementSize;
 } Stack;
 
 int    stack_init(Stack *stack, size_t elementSize);
-bool   stack_is_empty(const Stack *stack);
+int    stack_is_empty(const Stack *stack);
 int    stack_push(Stack *stack, const void *element);
-void  *stack_pop(Stack *stack);
-void  *stack_peek(const Stack *stack);
+int    stack_pop(Stack *stack, void *out);
+int    stack_peek(const Stack *stack, void *out);
 size_t stack_size(const Stack *stack);
 void   stack_free(Stack *stack);
 
@@ -29,4 +26,4 @@ void   stack_free(Stack *stack);
 }
 #endif
 
-#endif // STACK_H
+#endif /* STACK_H */

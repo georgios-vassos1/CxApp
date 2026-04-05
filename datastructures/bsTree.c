@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "stack.h"
 #include "bsTree.h"
+#include "cxds_internal.h"
 
 BSTree* bst_create(int (*cmp)(const void *, const void *),
                    void (*free_data)(void *))
@@ -21,12 +22,6 @@ static BSTNode* create_node(void *data) {
     n->data = data;
     n->left = n->right = NULL;
     return n;
-}
-
-/* ── helpers ─────────────────────────────────────────────────────── */
-
-static void free_data_if(void (*free_data)(void *), void *data) {
-    if (free_data) free_data(data);
 }
 
 /* ── recursive insert ────────────────────────────────────────────── */
@@ -58,6 +53,7 @@ static BSTNode* insert_rec(BSTNode *node, void *data,
 }
 
 int bst_insert(BSTree *tree, void *data) {
+    if (!tree) return -1;
     int status = 0;
     tree->root = insert_rec(tree->root, data, tree->cmp, tree->free_data, &status);
     if (status == 1) tree->count++;
@@ -67,6 +63,7 @@ int bst_insert(BSTree *tree, void *data) {
 /* ── iterative insert ────────────────────────────────────────────── */
 
 int bst_insert_iter(BSTree *tree, void *data) {
+    if (!tree) return -1;
     BSTNode *newNode = create_node(data);
     if (!newNode) return -1;
     if (tree->root == NULL) {
@@ -104,12 +101,14 @@ static void* search_rec(const BSTNode *node, const void *probe,
 }
 
 void* bst_search(const BSTree *tree, const void *probe) {
+    if (!tree) return NULL;
     return search_rec(tree->root, probe, tree->cmp);
 }
 
 /* ── iterative search ────────────────────────────────────────────── */
 
 void* bst_search_iter(const BSTree *tree, const void *probe) {
+    if (!tree) return NULL;
     const BSTNode *cur = tree->root;
     while (cur) {
         int c = tree->cmp(probe, cur->data);
@@ -165,6 +164,7 @@ static BSTNode* delete_rec(BSTNode *node, const void *probe,
 }
 
 int bst_delete(BSTree *tree, const void *probe) {
+    if (!tree) return -1;
     int found = 0;
     tree->root = delete_rec(tree->root, probe, tree->cmp, tree->free_data, &found);
     if (found) { tree->count--; return 0; }
@@ -174,12 +174,14 @@ int bst_delete(BSTree *tree, const void *probe) {
 /* ── iterative delete ────────────────────────────────────────────── */
 
 int bst_delete_iter(BSTree *tree, const void *probe) {
+    if (!tree) return -1;
     BSTNode *parent = NULL;
     BSTNode *cur = tree->root;
+    int c;
 
-    while (cur && tree->cmp(probe, cur->data) != 0) {
+    while (cur && (c = tree->cmp(probe, cur->data)) != 0) {
         parent = cur;
-        cur = (tree->cmp(probe, cur->data) < 0) ? cur->left : cur->right;
+        cur = (c < 0) ? cur->left : cur->right;
     }
     if (cur == NULL) return -1;
 
@@ -222,14 +224,23 @@ static void postorder_rec(const BSTNode *n, void (*visit)(const void *)) {
     if (n) { postorder_rec(n->left, visit); postorder_rec(n->right, visit); visit(n->data); }
 }
 
-void bst_inorder(const BSTree *tree, void (*visit)(const void *))  { inorder_rec(tree->root, visit); }
-void bst_preorder(const BSTree *tree, void (*visit)(const void *)) { preorder_rec(tree->root, visit); }
-void bst_postorder(const BSTree *tree, void (*visit)(const void *)){ postorder_rec(tree->root, visit); }
+void bst_inorder(const BSTree *tree, void (*visit)(const void *))  {
+    if (!tree) return;
+    inorder_rec(tree->root, visit);
+}
+void bst_preorder(const BSTree *tree, void (*visit)(const void *)) {
+    if (!tree) return;
+    preorder_rec(tree->root, visit);
+}
+void bst_postorder(const BSTree *tree, void (*visit)(const void *)) {
+    if (!tree) return;
+    postorder_rec(tree->root, visit);
+}
 
 /* ── iterative traversals ────────────────────────────────────────── */
 
 void bst_inorder_iter(const BSTree *tree, void (*visit)(const void *)) {
-    if (!tree->root) return;
+    if (!tree || !tree->root) return;
     Stack stack;
     if (stack_init(&stack, sizeof(const BSTNode *)) != 0) return;
     const BSTNode *cur = tree->root;
@@ -238,27 +249,23 @@ void bst_inorder_iter(const BSTree *tree, void (*visit)(const void *)) {
             if (stack_push(&stack, &cur) != 0) { stack_free(&stack); return; }
             cur = cur->left;
         }
-        const BSTNode **pp = stack_pop(&stack);
-        if (!pp) break;
-        cur = *pp;
-        free(pp);
-        visit(cur->data);
-        cur = cur->right;
+        const BSTNode *node;
+        if (stack_pop(&stack, &node) != 0) break;
+        visit(node->data);
+        cur = node->right;
     }
     stack_free(&stack);
 }
 
 void bst_preorder_iter(const BSTree *tree, void (*visit)(const void *)) {
-    if (!tree->root) return;
+    if (!tree || !tree->root) return;
     Stack stack;
     if (stack_init(&stack, sizeof(const BSTNode *)) != 0) return;
     const BSTNode *r = tree->root;
     if (stack_push(&stack, &r) != 0) { stack_free(&stack); return; }
     while (!stack_is_empty(&stack)) {
-        const BSTNode **pp = stack_pop(&stack);
-        if (!pp) break;
-        const BSTNode *cur = *pp;
-        free(pp);
+        const BSTNode *cur;
+        if (stack_pop(&stack, &cur) != 0) break;
         visit(cur->data);
         if (cur->right) {
             if (stack_push(&stack, &cur->right) != 0) { stack_free(&stack); return; }
@@ -271,17 +278,15 @@ void bst_preorder_iter(const BSTree *tree, void (*visit)(const void *)) {
 }
 
 void bst_postorder_iter(const BSTree *tree, void (*visit)(const void *)) {
-    if (!tree->root) return;
+    if (!tree || !tree->root) return;
     Stack s1, s2;
     if (stack_init(&s1, sizeof(const BSTNode *)) != 0) return;
     if (stack_init(&s2, sizeof(const BSTNode *)) != 0) { stack_free(&s1); return; }
     const BSTNode *r = tree->root;
     if (stack_push(&s1, &r) != 0) { stack_free(&s1); stack_free(&s2); return; }
     while (!stack_is_empty(&s1)) {
-        const BSTNode **pp = stack_pop(&s1);
-        if (!pp) break;
-        const BSTNode *cur = *pp;
-        free(pp);
+        const BSTNode *cur;
+        if (stack_pop(&s1, &cur) != 0) break;
         if (stack_push(&s2, &cur) != 0) { stack_free(&s1); stack_free(&s2); return; }
         if (cur->left) {
             if (stack_push(&s1, &cur->left) != 0) { stack_free(&s1); stack_free(&s2); return; }
@@ -291,10 +296,9 @@ void bst_postorder_iter(const BSTree *tree, void (*visit)(const void *)) {
         }
     }
     while (!stack_is_empty(&s2)) {
-        const BSTNode **pp = stack_pop(&s2);
-        if (!pp) break;
-        visit((*pp)->data);
-        free(pp);
+        const BSTNode *node;
+        if (stack_pop(&s2, &node) != 0) break;
+        visit(node->data);
     }
     stack_free(&s1);
     stack_free(&s2);
@@ -315,24 +319,25 @@ static void print_rec(const BSTNode *n, int level, const char *prefix,
 }
 
 void bst_print(const BSTree *tree, void (*print_fn)(const void *)) {
+    if (!tree) return;
     print_rec(tree->root, 0, "Root: ", print_fn);
 }
 
-/* ── new operations ──────────────────────────────────────────────── */
+/* ── accessors ───────────────────────────────────────────────────── */
 
 size_t bst_size(const BSTree *tree) {
-    return tree->count;
+    return tree ? tree->count : 0;
 }
 
 void* bst_min(const BSTree *tree) {
-    if (!tree->root) return NULL;
+    if (!tree || !tree->root) return NULL;
     const BSTNode *n = tree->root;
     while (n->left) n = n->left;
     return n->data;
 }
 
 void* bst_max(const BSTree *tree) {
-    if (!tree->root) return NULL;
+    if (!tree || !tree->root) return NULL;
     const BSTNode *n = tree->root;
     while (n->right) n = n->right;
     return n->data;
@@ -347,14 +352,14 @@ static void collect_inorder(const BSTNode *n, void **arr, size_t *idx) {
 }
 
 void** bst_to_array(const BSTree *tree, size_t *out_count) {
-    if (tree->count == 0) {
-        *out_count = 0;
-        return NULL;
-    }
+    if (!tree || !out_count) return NULL;
+    *out_count = tree->count;
+    if (tree->count == 0)
+        return calloc(1, sizeof(void *));   /* non-NULL ⇒ success (empty) */
     void **arr = malloc(tree->count * sizeof(void *));
     if (!arr) {
         *out_count = 0;
-        return NULL;
+        return NULL;                        /* NULL ⇒ alloc failure */
     }
     size_t idx = 0;
     collect_inorder(tree->root, arr, &idx);
@@ -374,6 +379,7 @@ static void free_rec(BSTNode *n, void (*free_data)(void *)) {
 }
 
 void bst_free(BSTree *tree) {
+    if (!tree) return;
     free_rec(tree->root, tree->free_data);
     free(tree);
 }

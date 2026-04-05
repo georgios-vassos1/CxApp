@@ -45,21 +45,16 @@ int main(void) {
     stack_push(&stack, &n2);
     stack_push(&stack, &n3);
 
-    BSTNode **popped = (BSTNode **)stack_pop(&stack);
-    if (popped) {
-        printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
-        free(popped);
-    }
+    BSTNode *popped;
+    if (stack_pop(&stack, &popped) == 0)
+        printf("Popped: %d\n", ((Item *)popped->data)->id);
 
-    popped = (BSTNode **)stack_pop(&stack);
-    if (popped) {
-        printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
-        free(popped);
-    }
+    if (stack_pop(&stack, &popped) == 0)
+        printf("Popped: %d\n", ((Item *)popped->data)->id);
 
-    BSTNode **top = (BSTNode **)stack_peek(&stack);
-    if (top)
-        printf("Top element: %d\n", ((Item *)(*top)->data)->id);
+    BSTNode *top;
+    if (stack_peek(&stack, &top) == 0)
+        printf("Top element: %d\n", ((Item *)top->data)->id);
 
     stack_free(&stack);
     bst_free(tree);

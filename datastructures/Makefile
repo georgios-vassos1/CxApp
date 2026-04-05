@@ -1,15 +1,15 @@
 CC       := clang
-CFLAGS   := -std=c11 -Wall -Wextra -Wpedantic -Wconversion -fPIC
+CFLAGS   := -std=c11 -Wall -Wextra -Wpedantic -Wconversion -fPIC -MMD -MP
 LDFLAGS  :=
 
 UNAME_S  := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
     SHARED_EXT   := dylib
-    SHARED_FLAGS := -dynamiclib
+    SHARED_FLAGS := -dynamiclib -install_name @rpath/libcxds.$(SHARED_EXT)
     RPATH_FLAG   := -Wl,-rpath,@loader_path
 else
     SHARED_EXT   := so
-    SHARED_FLAGS := -shared
+    SHARED_FLAGS := -shared -Wl,-soname,libcxds.$(SHARED_EXT).1
     RPATH_FLAG   := -Wl,-rpath,'$$ORIGIN'
 endif
 
@@ -20,6 +20,7 @@ LIB_OBJS := $(LIB_SRCS:.c=.o)
 
 DEMOS    := bsTree_demo hash_table_demo linked_list_demo \
             stack_demo_int stack_demo_node
+DEMO_OBJS := $(addsuffix .o,$(DEMOS))
 
 .PHONY: all demos clean
 
@@ -37,4 +38,6 @@ $(DEMOS): %: %.o $(LIB_NAME)
 	$(CC) -o $@ $< -L. -lcxds $(RPATH_FLAG) $(LDFLAGS)
 
 clean:
-	rm -f *.o $(LIB_NAME) $(DEMOS)
+	rm -f *.o *.d $(LIB_NAME) $(DEMOS)
+
+-include $(LIB_OBJS:.o=.d) $(DEMO_OBJS:.o=.d)
