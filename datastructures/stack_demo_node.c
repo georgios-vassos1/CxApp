@@ -3,38 +3,56 @@
 #include "stack.h"
 #include "bsTree.h"
 
+/* A small struct to push onto the stack, demonstrating that the
+   generic BST node now holds void *data. */
+typedef struct { int id; } Item;
+
+static int cmp_item(const void *a, const void *b) {
+    int ka = ((const Item *)a)->id;
+    int kb = ((const Item *)b)->id;
+    return (ka > kb) - (ka < kb);
+}
+
+static Item* make_item(int id) {
+    Item *it = malloc(sizeof(Item));
+    if (!it) { perror("malloc"); exit(EXIT_FAILURE); }
+    it->id = id;
+    return it;
+}
+
 int main(void) {
+    /* Build a small BST just to get some BSTNode pointers */
+    BSTree *tree = bst_create(cmp_item, free);
+    bst_insert(tree, make_item(1));
+    bst_insert(tree, make_item(2));
+    bst_insert(tree, make_item(3));
+
+    /* Push BSTNode pointers onto the stack */
     Stack stack;
     stack_init(&stack, sizeof(BSTNode *));
 
-    BSTNode *node1 = bst_create_node(1);
-    BSTNode *node2 = bst_create_node(2);
-    BSTNode *node3 = bst_create_node(3);
+    /* Walk the tree manually to get node pointers for the stack demo */
+    BSTNode *n1 = tree->root;               /* key 1 */
+    BSTNode *n2 = tree->root->right;        /* key 2 */
+    BSTNode *n3 = tree->root->right->right; /* key 3 */
 
-    stack_push(&stack, &node1);
-    stack_push(&stack, &node2);
-    stack_push(&stack, &node3);
+    stack_push(&stack, &n1);
+    stack_push(&stack, &n2);
+    stack_push(&stack, &n3);
 
-    BSTNode **poppedNode = (BSTNode **)stack_pop(&stack);
-    printf("Popped: %d\n", (*poppedNode)->key);
-    free(poppedNode);
+    BSTNode **popped = (BSTNode **)stack_pop(&stack);
+    printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
+    free(popped);
 
-    poppedNode = (BSTNode **)stack_pop(&stack);
-    printf("Popped: %d\n", (*poppedNode)->key);
-    free(poppedNode);
+    popped = (BSTNode **)stack_pop(&stack);
+    printf("Popped: %d\n", ((Item *)(*popped)->data)->id);
+    free(popped);
 
-    BSTNode *node4 = bst_create_node(4);
-    stack_push(&stack, &node4);
-
-    BSTNode **topNode = (BSTNode **)stack_peek(&stack);
-    printf("Top element: %d\n", (*topNode)->key);
+    BSTNode **top = (BSTNode **)stack_peek(&stack);
+    printf("Top element: %d\n", ((Item *)(*top)->data)->id);
 
     stack_free(&stack);
-
-    free(node1);
-    free(node2);
-    free(node3);
-    free(node4);
+    bst_free(tree);
 
     return 0;
 }

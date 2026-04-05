@@ -1,174 +1,143 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "hash_table.h"
 
-// Polynomial rolling hash
-static unsigned long ht_hash(const char *key, size_t size) {
-    unsigned long hashval = 0;
-    while (*key != '\0') {
-        hashval = hashval * 31 + (unsigned char)(*key++);
-    }
-    return hashval % size;
+static void free_data_if(void (*free_data)(void *), void *data) {
+    if (free_data) free_data(data);
 }
 
-static Record* create_record(const char *word, int num_reviews, float avg_rating) {
-    Record *rec = malloc(sizeof(Record));
-    if (rec == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(EXIT_FAILURE);
-    }
-    rec->word = strdup(word);
-    if (rec->word == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        free(rec);
-        exit(EXIT_FAILURE);
-    }
-    rec->num_reviews = num_reviews;
-    rec->avg_rating = avg_rating;
-    rec->next = NULL;
-    return rec;
-}
-
-HashTable* ht_init(size_t size) {
+HashTable* ht_init(size_t initial_size,
+                   size_t (*hash)(const void *),
+                   int    (*cmp)(const void *, const void *),
+                   void   (*free_data)(void *))
+{
     HashTable *ht = malloc(sizeof(HashTable));
-    if (ht == NULL) {
+    if (!ht) {
         fprintf(stderr, "Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
-    ht->size = size;
-    ht->count = 0;
-    ht->table = malloc(size * sizeof(Bucket));
-    if (ht->table == NULL) {
+    ht->size      = initial_size;
+    ht->count     = 0;
+    ht->hash      = hash;
+    ht->cmp       = cmp;
+    ht->free_data = free_data;
+    ht->buckets   = calloc(initial_size, sizeof(HTEntry *));
+    if (!ht->buckets) {
         fprintf(stderr, "Memory allocation failed\n");
         free(ht);
         exit(EXIT_FAILURE);
     }
-    for (size_t i = 0; i < size; i++) {
-        ht->table[i].head = NULL;
-    }
     return ht;
 }
 
-static void rehash(HashTable *ht, size_t newSize) {
-    HashTable *newHT = ht_init(newSize);
+static void rehash(HashTable *ht, size_t new_size) {
+    HTEntry **new_buckets = calloc(new_size, sizeof(HTEntry *));
+    if (!new_buckets) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
     for (size_t i = 0; i < ht->size; i++) {
-        Record *rec = ht->table[i].head;
-        while (rec != NULL) {
-            size_t idx = ht_hash(rec->word, newSize);
-            Record *next = rec->next;
-            rec->next = newHT->table[idx].head;
-            newHT->table[idx].head = rec;
-            rec = next;
+        HTEntry *e = ht->buckets[i];
+        while (e) {
+            HTEntry *next = e->next;
+            size_t idx = ht->hash(e->data) % new_size;
+            e->next = new_buckets[idx];
+            new_buckets[idx] = e;
+            e = next;
         }
     }
-    free(ht->table);
-    ht->table = newHT->table;
-    ht->size = newSize;
-    free(newHT);
+    free(ht->buckets);
+    ht->buckets = new_buckets;
+    ht->size = new_size;
 }
 
-void ht_insert(HashTable *ht, const char *word, int num_reviews, float rating) {
-    size_t index = ht_hash(word, ht->size);
-    Record *cur = ht->table[index].head;
+void ht_insert(HashTable *ht, void *data) {
+    size_t idx = ht->hash(data) % ht->size;
+    HTEntry *cur = ht->buckets[idx];
 
-    // Update existing record if word already present
-    while (cur != NULL) {
-        if (strcmp(cur->word, word) == 0) {
-            cur->avg_rating = (cur->avg_rating * (float)cur->num_reviews + rating)
-                              / (float)(cur->num_reviews + num_reviews);
-            cur->num_reviews += num_reviews;
+    /* replace if key already exists */
+    while (cur) {
+        if (ht->cmp(cur->data, data) == 0) {
+            free_data_if(ht->free_data, cur->data);
+            cur->data = data;
             return;
         }
         cur = cur->next;
     }
 
-    // Insert new record at head of bucket
-    Record *rec = create_record(word, num_reviews, rating);
-    rec->next = ht->table[index].head;
-    ht->table[index].head = rec;
+    /* new entry */
+    HTEntry *e = malloc(sizeof(HTEntry));
+    if (!e) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    e->data = data;
+    e->next = ht->buckets[idx];
+    ht->buckets[idx] = e;
     ht->count++;
 
-    double loadFactor = (double)ht->count / (double)ht->size;
-    if (loadFactor >= HIGH_LOAD) {
+    double lf = (double)ht->count / (double)ht->size;
+    if (lf >= HIGH_LOAD)
         rehash(ht, ht->size * 2);
-    }
 }
 
-void ht_delete(HashTable *ht, const char *word) {
-    size_t index = ht_hash(word, ht->size);
-    Record *prev = NULL;
-    Record *cur = ht->table[index].head;
-    while (cur != NULL && strcmp(cur->word, word) != 0) {
-        prev = cur;
-        cur = cur->next;
-    }
-    if (cur == NULL) {
-        fprintf(stderr, "Word not found\n");
-        return;
-    }
-    if (prev == NULL) {
-        ht->table[index].head = cur->next;
-    } else {
-        prev->next = cur->next;
-    }
-    free(cur->word);
-    free(cur);
-    ht->count--;
-
-    double loadFactor = (double)ht->count / (double)ht->size;
-    if (loadFactor <= LOW_LOAD && ht->size > INIT_HSIZE) {
-        rehash(ht, ht->size / 2);
-    }
-}
-
-Record* ht_search(HashTable *ht, const char *word) {
-    size_t index = ht_hash(word, ht->size);
-    Record *cur = ht->table[index].head;
-    while (cur != NULL) {
-        if (strcmp(cur->word, word) == 0) {
-            return cur;
-        }
+void* ht_search(const HashTable *ht, const void *probe) {
+    size_t idx = ht->hash(probe) % ht->size;
+    HTEntry *cur = ht->buckets[idx];
+    while (cur) {
+        if (ht->cmp(cur->data, probe) == 0)
+            return cur->data;
         cur = cur->next;
     }
     return NULL;
 }
 
-void ht_update(HashTable *ht, const char *word, int num_reviews, float avg_rating) {
-    Record *rec = ht_search(ht, word);
-    if (rec == NULL) {
-        fprintf(stderr, "Word not found\n");
-        return;
+void ht_delete(HashTable *ht, const void *probe) {
+    size_t idx = ht->hash(probe) % ht->size;
+    HTEntry *prev = NULL;
+    HTEntry *cur = ht->buckets[idx];
+
+    while (cur && ht->cmp(cur->data, probe) != 0) {
+        prev = cur;
+        cur = cur->next;
     }
-    rec->num_reviews = num_reviews;
-    rec->avg_rating = avg_rating;
+    if (!cur) return;
+
+    if (prev)
+        prev->next = cur->next;
+    else
+        ht->buckets[idx] = cur->next;
+
+    free_data_if(ht->free_data, cur->data);
+    free(cur);
+    ht->count--;
+
+    double lf = (double)ht->count / (double)ht->size;
+    if (lf <= LOW_LOAD && ht->size > INIT_HSIZE)
+        rehash(ht, ht->size / 2);
 }
 
-static void print_record(const Record *rec) {
-    printf("%s %d %.1f\n", rec->word, rec->num_reviews, rec->avg_rating);
-}
-
-void ht_print(const HashTable *ht) {
+void ht_print(const HashTable *ht, void (*print_fn)(const void *)) {
     for (size_t i = 0; i < ht->size; i++) {
-        const Record *rec = ht->table[i].head;
-        while (rec != NULL) {
-            print_record(rec);
-            rec = rec->next;
+        const HTEntry *e = ht->buckets[i];
+        while (e) {
+            print_fn(e->data);
+            e = e->next;
         }
     }
 }
 
 void ht_free(HashTable *ht) {
     for (size_t i = 0; i < ht->size; i++) {
-        Record *rec = ht->table[i].head;
-        while (rec != NULL) {
-            Record *next = rec->next;
-            free(rec->word);
-            free(rec);
-            rec = next;
+        HTEntry *e = ht->buckets[i];
+        while (e) {
+            HTEntry *next = e->next;
+            free_data_if(ht->free_data, e->data);
+            free(e);
+            e = next;
         }
     }
-    free(ht->table);
+    free(ht->buckets);
     free(ht);
 }

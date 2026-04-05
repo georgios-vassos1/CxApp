@@ -7,29 +7,29 @@
 #define HIGH_LOAD   0.75
 #define LOW_LOAD    0.25
 
-typedef struct Record {
-    char *word;
-    int num_reviews;
-    float avg_rating;
-    struct Record *next;
-} Record;
-
-typedef struct Bucket {
-    struct Record *head;
-} Bucket;
+typedef struct HTEntry {
+    void *data;
+    struct HTEntry *next;
+} HTEntry;
 
 typedef struct HashTable {
     size_t size;
     size_t count;
-    struct Bucket *table;
+    HTEntry **buckets;
+    size_t (*hash)(const void *);
+    int    (*cmp)(const void *, const void *);
+    void   (*free_data)(void *);
 } HashTable;
 
-HashTable* ht_init(size_t size);
-void    ht_insert(HashTable *ht, const char *word, int num_reviews, float rating);
-Record* ht_search(HashTable *ht, const char *word);
-void    ht_update(HashTable *ht, const char *word, int num_reviews, float avg_rating);
-void    ht_delete(HashTable *ht, const char *word);
-void    ht_free(HashTable *ht);
-void    ht_print(const HashTable *ht);
+HashTable* ht_init(size_t initial_size,
+                   size_t (*hash)(const void *),
+                   int    (*cmp)(const void *, const void *),
+                   void   (*free_data)(void *));
 
-#endif // HASH_TABLE_H
+void  ht_insert(HashTable *ht, void *data);
+void* ht_search(const HashTable *ht, const void *probe);
+void  ht_delete(HashTable *ht, const void *probe);
+void  ht_print(const HashTable *ht, void (*print_fn)(const void *));
+void  ht_free(HashTable *ht);
+
+#endif /* HASH_TABLE_H */

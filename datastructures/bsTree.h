@@ -2,25 +2,39 @@
 #define BST_H
 
 typedef struct BSTNode {
-    int key;
+    void *data;
     struct BSTNode *left, *right;
 } BSTNode;
 
-BSTNode* bst_create_node(int key);
-BSTNode* bst_insert(BSTNode *node, int key);
-BSTNode* bst_search(BSTNode *root, int key);
-BSTNode* bst_delete(BSTNode *root, int key);
-void bst_inorder(const BSTNode *root);
-void bst_preorder(const BSTNode *root);
-void bst_postorder(const BSTNode *root);
-void bst_free(BSTNode *root);
-void bst_print(const BSTNode *root, int level, const char *prefix);
+typedef struct BSTree {
+    BSTNode *root;
+    int (*cmp)(const void *, const void *);
+    void (*free_data)(void *);
+} BSTree;
 
-BSTNode* bst_insert_iter(BSTNode *root, int key);
-BSTNode* bst_search_iter(BSTNode *root, int key);
-BSTNode* bst_delete_iter(BSTNode *root, int key);
-void bst_inorder_iter(const BSTNode *root);
-void bst_preorder_iter(const BSTNode *root);
-void bst_postorder_iter(const BSTNode *root);
+BSTree* bst_create(int (*cmp)(const void *, const void *),
+                   void (*free_data)(void *));
 
-#endif // BST_H
+void   bst_insert(BSTree *tree, void *data);
+void   bst_insert_iter(BSTree *tree, void *data);
+
+void*  bst_search(const BSTree *tree, const void *probe);
+void*  bst_search_iter(const BSTree *tree, const void *probe);
+
+void   bst_delete(BSTree *tree, const void *probe);
+void   bst_delete_iter(BSTree *tree, const void *probe);
+
+void   bst_inorder(const BSTree *tree, void (*visit)(const void *));
+void   bst_preorder(const BSTree *tree, void (*visit)(const void *));
+void   bst_postorder(const BSTree *tree, void (*visit)(const void *));
+
+void   bst_inorder_iter(const BSTree *tree, void (*visit)(const void *));
+void   bst_preorder_iter(const BSTree *tree, void (*visit)(const void *));
+void   bst_postorder_iter(const BSTree *tree, void (*visit)(const void *));
+
+void   bst_print(const BSTree *tree,
+                 void (*print_fn)(const void *));
+
+void   bst_free(BSTree *tree);
+
+#endif /* BST_H */

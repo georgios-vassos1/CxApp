@@ -1,17 +1,23 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
+#include <stddef.h>
+
 typedef struct ListNode {
-    char *word;
-    int num_reviews;
-    int sum_ratings;
+    void *data;
     struct ListNode *prev;
     struct ListNode *next;
 } ListNode;
 
-ListNode* list_create_node(const char *word, int num_reviews, int sum_ratings);
-void list_insert_end(ListNode **head, const char *word, int num_reviews, int sum_ratings);
-void list_display(const ListNode *head);
-void list_free(ListNode **head);
+typedef struct List {
+    ListNode *head;
+    size_t count;
+    void (*free_data)(void *);
+} List;
 
-#endif // LINKED_LIST_H
+List* list_create(void (*free_data)(void *));
+void  list_insert_end(List *list, void *data);
+void  list_display(const List *list, void (*print_fn)(const void *));
+void  list_free(List *list);
+
+#endif /* LINKED_LIST_H */
