@@ -15,12 +15,12 @@ endif
 
 LIB_NAME := libcxds.$(SHARED_EXT)
 
-LIB_SRCS := stack.c bsTree.c hash_table.c linked_list.c fib_heap.c rbt.c ds_helpers.c
+LIB_SRCS := stack.c bsTree.c hash_table.c linked_list.c fib_heap.c rbt.c btree.c ds_helpers.c
 LIB_OBJS := $(LIB_SRCS:.c=.o)
 
 DEMOS    := bsTree_demo hash_table_demo linked_list_demo \
             stack_demo_int stack_demo_node fib_heap_demo fib_heap_bench \
-            rbt_demo rbt_bench
+            rbt_demo rbt_bench btree_demo btree_bench
 DEMO_OBJS := $(addsuffix .o,$(DEMOS))
 
 .PHONY: all demos clean
