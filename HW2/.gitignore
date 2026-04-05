@@ -1,1 +1,22 @@
+# Build artefacts
+*.o
+*.so
+*.dylib
+*.a
+hw2
+
+# Editor / IDE
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Debug symbol bundles
+*.dSYM/
+
+# Previous ignore
 xx*
