@@ -3,13 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <time.h>
 
-#include "reader.h"
 #include "hangman.h"
 
-void print_word(char *word, char *guessed_letters) {
-    for (int i = 0; i < strlen(word); i++) {
+void print_word(const char *word, const char *guessed_letters) {
+    int len = strlen(word);
+    for (int i = 0; i < len; i++) {
         if (strchr(guessed_letters, word[i]) != NULL) {
             printf("%c ", word[i]);
         } else {
@@ -20,18 +19,19 @@ void print_word(char *word, char *guessed_letters) {
 }
 
 bool is_letter(char c) {
-    return isalpha(c);
+    return isalpha((unsigned char)c);
 }
 
-bool is_already_guessed(char c, char *guessed_letters) {
+bool is_already_guessed(char c, const char *guessed_letters) {
     return strchr(guessed_letters, c) != NULL;
 }
 
-void play_game(char *word, const int num_rounds, int *player_wins, int *program_wins) {
-    char guessed_letters[num_rounds + 1];
+void play_game(const char *word, int num_rounds, int *player_wins, int *program_wins) {
+    /* At most ALPHABET_SIZE distinct letters can ever be guessed. */
+    char guessed_letters[ALPHABET_SIZE + 1];
     guessed_letters[0] = '\0';
+    int guessed_count = 0;
     int cur_round = 0;
-    int correct_guesses = 0;
 
     while (cur_round < num_rounds) {
         printf("\n== ROUND %d/%d ==\n\n", cur_round + 1, num_rounds);
@@ -52,30 +52,40 @@ void play_game(char *word, const int num_rounds, int *player_wins, int *program_
 
         printf("\nGuess a letter: ");
         char guess;
-        scanf(" %c", &guess);
+        if (scanf(" %c", &guess) != 1) break;
 
         if (!is_letter(guess)) {
             printf("%c is not a letter.\n", guess);
             continue;
         }
- 
-        guess = tolower(guess);
+
+        guess = tolower((unsigned char)guess);
 
         if (is_already_guessed(guess, guessed_letters)) {
             printf("You have already guessed %c.\n", guess);
             continue;
         }
 
-        guessed_letters[cur_round] = guess;
-        guessed_letters[cur_round + 1] = '\0';
-        
+        guessed_letters[guessed_count++] = guess;
+        guessed_letters[guessed_count] = '\0';
+
         if (strchr(word, guess) == NULL) {
-            printf("Wrong guess! You have %d guesses left.\n", num_rounds - cur_round);
-        } else {
-            correct_guesses++;
+            printf("Wrong guess! You have %d guesses left.\n", num_rounds - cur_round - 1);
         }
 
-        if (correct_guesses == strlen(word)) {
+        /*
+         * Win condition: every letter in the word is now in guessed_letters.
+         * Checking against strlen(word) was wrong for words with repeated
+         * letters (e.g. "hello" has length 5 but only 4 unique letters).
+         */
+        bool all_revealed = true;
+        for (int j = 0; word[j] != '\0'; j++) {
+            if (strchr(guessed_letters, word[j]) == NULL) {
+                all_revealed = false;
+                break;
+            }
+        }
+        if (all_revealed) {
             printf("\nYou won! The word is %s.\n", word);
             (*player_wins)++;
             return;

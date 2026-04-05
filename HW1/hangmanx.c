@@ -3,50 +3,45 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <time.h>
 
-#include "reader.h"
 #include "equivx.h"
 #include "hangman.h"
+#include "hangmanx.h"
 
-void print_word(char *word, char *guessed_letters) {
-    for (int i = 0; i < strlen(word); i++) {
-        if (strchr(guessed_letters, word[i]) != NULL) {
-            printf("%c ", word[i]);
-        } else {
-            printf("_ ");
-        }
+void play_game_x(char **words, int totalWords, int num_rounds,
+                 int *player_wins, int *program_wins) {
+    if (totalWords <= 0) {
+        fprintf(stderr, "Error: no words available to play.\n");
+        return;
     }
-    printf("\n");
-}
+    int word_length = strlen(words[0]);
 
-bool is_letter(char c) {
-    return isalpha(c);
-}
+    /*
+     * Pattern revealed to the player.
+     * Positions start as '_' and are filled in as letters are correctly guessed.
+     */
+    char *pattern = malloc(word_length + 1);
+    if (pattern == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    memset(pattern, '_', word_length);
+    pattern[word_length] = '\0';
 
-bool is_already_guessed(char c, char *guessed_letters) {
-    return strchr(guessed_letters, c) != NULL;
-}
-
-void play_game_x(char **words, int totalWords, const int num_rounds, int *player_wins, int *program_wins) {
-    char guessed_letters[num_rounds + 1];
+    /* At most ALPHABET_SIZE distinct letters can be guessed. */
+    char guessed_letters[ALPHABET_SIZE + 1];
     guessed_letters[0] = '\0';
-    int cur_round = 0;
-    int correct_guesses = 0;
+    int guessed_count = 0;
 
-    srand(time(NULL));
-    int idx = rand() % totalWords;
-    char *word = strdup(words[idx]); // Important: Create copy of word, not pointer to word
-
-    // View solution (DEBUG)
-    // printf("Word: %s\n", word);
-    int word_length = strlen(word);
-
+    /*
+     * Working candidate set — an owned copy so we can freely
+     * replace it each round with the winning equivalence class.
+     */
     int tmp_totalWords = totalWords;
     char **tmp_words = copyWords(words, totalWords);
 
-    int numGroups;
-    EquivalenceClass* groups = NULL;
+    int cur_round = 0;
+
     while (cur_round < num_rounds) {
         printf("\n== ROUND %d/%d ==\n\n", cur_round + 1, num_rounds);
         printf("Used letters: %s\n", guessed_letters);
@@ -62,71 +57,93 @@ void play_game_x(char **words, int totalWords, const int num_rounds, int *player
         printf("Unused letters: %s\n", unused_letters);
 
         printf("\nWord: ");
-        print_word(word, guessed_letters);
+        for (int i = 0; i < word_length; i++) {
+            printf("%c ", pattern[i]);
+        }
+        printf("\n");
 
         printf("\nGuess a letter: ");
         char guess;
-        scanf(" %c", &guess);
+        if (scanf(" %c", &guess) != 1) break;
 
         if (!is_letter(guess)) {
             printf("%c is not a letter.\n", guess);
             continue;
         }
- 
-        guess = tolower(guess);
+
+        guess = tolower((unsigned char)guess);
 
         if (is_already_guessed(guess, guessed_letters)) {
             printf("You have already guessed %c.\n", guess);
             continue;
         }
 
-        guessed_letters[cur_round] = guess;
-        guessed_letters[cur_round + 1] = '\0';
+        guessed_letters[guessed_count++] = guess;
+        guessed_letters[guessed_count] = '\0';
 
-        groups = generateEquivalenceClasses(tmp_words, tmp_totalWords, word_length, &guess, &numGroups);
-        // Check if any element in group 1 is null
-        for (int i = 0; i < groups[0].numInstances; i++) {
-            if (groups[0].words[i] == NULL) {
-                printf("Index %d is null\n", i);
-                printf("Err: Memory allocation failed.\n");
+        /*
+         * generateEquivalenceClasses expects a null-terminated string,
+         * not a bare char pointer — pass a two-byte array.
+         */
+        char guess_str[2] = {guess, '\0'};
+
+        int numGroups;
+        EquivalenceClass *groups = generateEquivalenceClasses(
+            tmp_words, tmp_totalWords, word_length, guess_str, &numGroups);
+
+        /*
+         * groups[0] is the largest equivalence class (sorted by numInstances
+         * descending).  Reveal positions where the guessed letter appears
+         * according to that class's code.
+         */
+        bool letter_found = false;
+        for (int j = 0; j < word_length; j++) {
+            if (groups[0].code[j] != 0) {
+                pattern[j] = guess;
+                letter_found = true;
             }
         }
 
-        if (groups != NULL) {
-            // Choose one word at random from the first group
-            // int wordIdx = rand() % groups[1].numInstances;
-            // strcpy(word, groups[1].words[wordIdx]);
+        /* Narrow the candidate set to the largest equivalence class. */
+        freeWords(tmp_words, tmp_totalWords);
+        tmp_words = copyWords(groups[0].words, groups[0].numInstances);
+        tmp_totalWords = groups[0].numInstances;
+
+        freeEquivalenceClasses(groups, numGroups);
+
+        if (!letter_found) {
+            printf("Wrong guess! You have %d guesses left.\n",
+                   num_rounds - cur_round - 1);
         }
 
-        if (strchr(word, guess) == NULL) {
-            printf("Wrong guess! You have %d guesses left.\n", num_rounds - cur_round);
-        } else {
-            correct_guesses++;
-            // freeWords(tmp_words, tmp_totalWords);
-            // tmp_words = copyWords(groups[1].words, groups[1].numInstances);
-            // tmp_totalWords = groups[1].numInstances;
+        /* Win condition: no underscores remain in the pattern. */
+        bool won = true;
+        for (int j = 0; j < word_length; j++) {
+            if (pattern[j] == '_') {
+                won = false;
+                break;
+            }
         }
-
-        // Free memory
-        if (groups != NULL) {
-            // printf("Freeing memory...\n");
-            freeEquivalenceClasses(groups, numGroups);
-        }
-
-        if (correct_guesses == word_length) {
-            printf("\nYou won! The word is %s.\n", word);
+        if (won) {
+            printf("\nYou won! The word is %s.\n", tmp_words[0]);
             (*player_wins)++;
+            freeWords(tmp_words, tmp_totalWords);
+            free(pattern);
             return;
         }
 
         cur_round++;
     }
-    // free(word);
 
+    /* Player lost — show partial pattern and reveal a candidate word. */
     printf("\nWord: ");
-    print_word(word, guessed_letters);
+    for (int i = 0; i < word_length; i++) {
+        printf("%c ", pattern[i]);
+    }
+    printf("\n");
 
-    printf("\nYou lost! The word is %s.\n", word);
+    printf("\nYou lost! The word is %s.\n", tmp_words[0]);
     (*program_wins)++;
+    freeWords(tmp_words, tmp_totalWords);
+    free(pattern);
 }
-

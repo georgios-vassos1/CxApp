@@ -1,13 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-#include "reader.h"
 #include "equivx.h"
 
-
-int compareCodes(int* code1, int* code2, int length) {
+int codesEqual(const int *code1, const int *code2, int length) {
     for (int i = 0; i < length; i++) {
         if (code1[i] != code2[i]) {
             return 0;
@@ -16,16 +13,16 @@ int compareCodes(int* code1, int* code2, int length) {
     return 1;
 }
 
-// Comparison function for sorting EquivalenceClass structs by numInstances
 int compareEqClasses(const void *a, const void *b) {
     const EquivalenceClass *x1 = (const EquivalenceClass *)a;
     const EquivalenceClass *x2 = (const EquivalenceClass *)b;
-    return (x2->numInstances - x1->numInstances);
+    if (x2->numInstances > x1->numInstances) return  1;
+    if (x2->numInstances < x1->numInstances) return -1;
+    return 0;
 }
 
-// Function to generate code for a word based on a letter
-int* generateCode(const char* word, int word_length, const char* letter) {
-    int* code = (int*) calloc(word_length, sizeof(int));
+int *generateCode(const char *word, int word_length, const char *letter) {
+    int *code = calloc(word_length, sizeof(int));
     if (code == NULL) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
@@ -42,18 +39,18 @@ int* generateCode(const char* word, int word_length, const char* letter) {
     return code;
 }
 
-// Function to update equivalence classes
-void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* code, const char* word) {
-    int word_length = strlen(word);
-
+void updateEquivalenceClasses(EquivalenceClass **groups, int *numGroups,
+                              int *code, int word_length, const char *word) {
     for (int j = 0; j < *numGroups; j++) {
-        if (compareCodes((*groups)[j].code, code, word_length)) {
+        if (codesEqual((*groups)[j].code, code, word_length)) {
             (*groups)[j].numInstances++;
-            (*groups)[j].words = (char**) realloc((*groups)[j].words, (*groups)[j].numInstances * sizeof(char*));
-            if ((*groups)[j].words == NULL) {
+            char **tmp_words = realloc((*groups)[j].words,
+                                       (*groups)[j].numInstances * sizeof(char *));
+            if (tmp_words == NULL) {
                 perror("Memory allocation failed");
                 exit(EXIT_FAILURE);
             }
+            (*groups)[j].words = tmp_words;
             (*groups)[j].words[(*groups)[j].numInstances - 1] = strdup(word);
             if ((*groups)[j].words[(*groups)[j].numInstances - 1] == NULL) {
                 perror("Memory allocation failed");
@@ -65,14 +62,16 @@ void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* co
     }
 
     (*numGroups)++;
-    *groups = (EquivalenceClass*) realloc(*groups, (*numGroups) * sizeof(EquivalenceClass));
-    if (*groups == NULL) {
+    EquivalenceClass *tmp_groups = realloc(*groups,
+                                           (*numGroups) * sizeof(EquivalenceClass));
+    if (tmp_groups == NULL) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
+    *groups = tmp_groups;
     (*groups)[*numGroups - 1].code = code;
     (*groups)[*numGroups - 1].numInstances = 1;
-    (*groups)[*numGroups - 1].words = (char**) malloc(sizeof(char*));
+    (*groups)[*numGroups - 1].words = malloc(sizeof(char *));
     if ((*groups)[*numGroups - 1].words == NULL) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
@@ -84,14 +83,15 @@ void updateEquivalenceClasses(EquivalenceClass** groups, int* numGroups, int* co
     }
 }
 
-// Function to generate equivalence classes for words
-EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int word_length, const char* letter, int* numGroups) {
+EquivalenceClass *generateEquivalenceClasses(char **words, int totalWords,
+                                             int word_length, const char *letter,
+                                             int *numGroups) {
     *numGroups = 0;
-    EquivalenceClass* groups = NULL;
+    EquivalenceClass *groups = NULL;
 
     for (int i = 0; i < totalWords; i++) {
-        int* code = generateCode(words[i], word_length, letter);
-        updateEquivalenceClasses(&groups, numGroups, code, words[i]);
+        int *code = generateCode(words[i], word_length, letter);
+        updateEquivalenceClasses(&groups, numGroups, code, word_length, words[i]);
     }
 
     qsort(groups, *numGroups, sizeof(EquivalenceClass), compareEqClasses);
@@ -99,15 +99,14 @@ EquivalenceClass* generateEquivalenceClasses(char** words, int totalWords, int w
     return groups;
 }
 
-void printWords(char** words, int numWords) {
+void printWords(char **words, int numWords) {
     for (int i = 0; i < numWords; i++) {
         printf("%s\n", words[i]);
     }
 }
 
-// Function to copy strings from one group to a temporary array
-char** copyWords(char **words, int numWords) {
-    char **tmp = (char**)malloc(numWords * sizeof(char*));
+char **copyWords(char **words, int numWords) {
+    char **tmp = malloc(numWords * sizeof(char *));
     if (tmp == NULL) {
         perror("Failed to allocate temporary array");
         exit(EXIT_FAILURE);
@@ -116,7 +115,6 @@ char** copyWords(char **words, int numWords) {
         tmp[i] = strdup(words[i]);
         if (tmp[i] == NULL) {
             perror("Failed to duplicate string");
-            // Free already allocated strings
             for (int j = 0; j < i; j++) {
                 free(tmp[j]);
             }
@@ -127,16 +125,14 @@ char** copyWords(char **words, int numWords) {
     return tmp;
 }
 
-// Function to free vector of words
-void freeWords(char** words, int numWords) {
+void freeWords(char **words, int numWords) {
     for (int i = 0; i < numWords; i++) {
         free(words[i]);
     }
     free(words);
 }
 
-// Function to free memory allocated for equivalence classes
-void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups) {
+void freeEquivalenceClasses(EquivalenceClass *groups, int numGroups) {
     for (int i = 0; i < numGroups; i++) {
         free(groups[i].code);
         for (int j = 0; j < groups[i].numInstances; j++) {
@@ -146,4 +142,3 @@ void freeEquivalenceClasses(EquivalenceClass* groups, int numGroups) {
     }
     free(groups);
 }
-
