@@ -22,7 +22,7 @@
  */
 
 #include "memory.h"
-#include "../../ads/test_framework.h"
+#include "../test_framework.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -138,8 +138,10 @@ static void test_PtrFind_ReturnsPointerToMatch(void)
     int arr[] = { 10, 20, 30, 40, 50 };
     int *p = ptr_find(arr, 5, 30);
     EXPECT_TRUE(p != NULL);
-    EXPECT_TRUE(p == &arr[2]);   /* correct address */
-    EXPECT_EQ(*p, 30);           /* correct value  */
+    if (p != NULL) {
+        EXPECT_TRUE(p == &arr[2]);
+        EXPECT_EQ(*p, 30);
+    }
 }
 
 /*
@@ -281,8 +283,10 @@ static void test_IntArrDup_CopiesValues(void)
     int expected[] = { 10, 20, 30, 40 };
     int *copy = int_arr_dup(arr, 4);
     EXPECT_TRUE(copy != NULL);
-    EXPECT_INT_ARRAY_EQ(copy, expected, 4);
-    free(copy);
+    if (copy != NULL) {
+        EXPECT_INT_ARRAY_EQ(copy, expected, 4);
+        free(copy);
+    }
 }
 
 /*
@@ -294,9 +298,11 @@ static void test_IntArrDup_IsIndependent(void)
     int arr[] = { 1, 2, 3 };
     int *copy = int_arr_dup(arr, 3);
     EXPECT_TRUE(copy != NULL);
-    copy[0] = 999;
-    EXPECT_EQ(arr[0], 1);   /* original unchanged */
-    free(copy);
+    if (copy != NULL) {
+        copy[0] = 999;
+        EXPECT_EQ(arr[0], 1);   /* original unchanged */
+        free(copy);
+    }
 }
 
 /*
