@@ -14,6 +14,8 @@
  */
 
 #include "sorting.h"
+#include <stdlib.h>
+#include <string.h>
 
 /* ------------------------------------------------------------------ */
 /*  Stubs (RED phase)                                                  */
@@ -21,10 +23,25 @@
 
 void counting_sort(int *arr, size_t n, int max_val)
 {
-    /* Not yet implemented — leaves arr unchanged. */
-    (void)arr;
-    (void)n;
-    (void)max_val;
+    if (n == 0) return;
+
+    int *count = calloc((size_t)max_val + 1, sizeof(int));
+    for (size_t i = 0; i < n; i++) {
+        count[arr[i]]++;
+    }
+
+    for (size_t i = 1; i < (size_t)max_val + 1; i++) {
+        count[i] += count[i - 1];
+    }
+
+    int *output = malloc(n * sizeof(int));
+    for (size_t i = n; i > 0; i--) {
+        output[--count[arr[i - 1]]] = arr[i - 1];
+    }
+
+    memcpy(arr, output, n * sizeof(int));
+    free(count);
+    free(output);
 }
 
 void radix_sort(unsigned int *arr, size_t n)
