@@ -1,0 +1,4 @@
+[package]
+name = "m07_type_driven_design"
+version = "0.1.0"
+edition = "2021"

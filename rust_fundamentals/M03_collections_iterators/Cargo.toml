@@ -1,0 +1,4 @@
+[package]
+name = "m03_collections_iterators"
+version = "0.1.0"
+edition = "2021"

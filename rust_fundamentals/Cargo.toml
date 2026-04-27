@@ -1,0 +1,17 @@
+[workspace]
+members = [
+    "M01_ownership_borrowing",
+    "M02_structs_enums",
+    "M03_collections_iterators",
+    "M04_error_handling",
+    "M05_traits_generics",
+    "M06_closures_functional",
+    "M07_type_driven_design",
+    "M08_module_organisation",
+    "M09_error_handling_patterns",
+    "M10_serde_dto",
+    "M11_trait_polymorphism",
+    "M12_macros_codegen",
+    "M13_test_patterns",
+]
+resolver = "2"

@@ -1,0 +1,7 @@
+[package]
+name = "m13_test_patterns"
+version = "0.1.0"
+edition = "2021"
+
+[dev-dependencies]
+rstest = "0.18"
