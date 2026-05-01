@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "agentic-systems"
+version = "0.1.0"
+description = "TDD course: A2A protocol, LangGraph agents, Streamlit integration"
+authors = ["Georgios Vassos"]
+readme = "PLAN.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "~3.11"
+fastapi = ">=0.115"
+uvicorn = {version = ">=0.34", extras = ["standard"]}
+pydantic = ">=2.10"
+httpx = ">=0.28"
+aiosqlite = ">=0.21"
+langgraph = ">=1.0"
+langgraph-prebuilt = ">=1.0"
+langchain-openai = ">=0.3"
+langchain-community = ">=0.3"
+streamlit = ">=1.40"
+mlflow = ">=2.18"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.3"
+pytest-asyncio = ">=0.25"
+polyfactory = ">=2.19"
+ruff = ">=0.9"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--import-mode=importlib"
+testpaths = [
+    "M01_json_rpc/tests",
+    "M02_multi_turn_sessions/tests",
+    "M03_async_persistence/tests",
+    "M04_langgraph_basics/tests",
+    "M05_tool_design/tests",
+    "M06_system_prompt/tests",
+    "M07_pydantic_contracts/tests",
+    "M08_offline_evaluation/tests",
+    "M09_a2a_client_adapter/tests",
+    "M10_streamlit_session_state/tests",
+    "M11_two_phase_submit/tests",
+    "M12_testing_patterns/tests",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
