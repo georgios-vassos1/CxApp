@@ -47,6 +47,16 @@ Run the entire course:
 
 ---
 
+## Part 4 — Durable Execution & Production Patterns
+
+| Module | Topic | Key Concepts |
+|--------|-------|--------------|
+| M13 | Durable Execution Fundamentals | Append-only journal, replay semantics, determinism contract, VirtualObject |
+| M14 | Custom Checkpointer | Base64 serialisation, PreloadedCheckpointer, zero-I/O pattern, pending writes |
+| M15 | Graph Factory & State Optimisation | build_graph() returns uncompiled StateGraph, caller-owned compile, module-level cache |
+
+---
+
 ## Domain
 
 Weather station analysis — local JSON data, no external API dependencies.
@@ -62,4 +72,4 @@ Tools: `list_stations`, `get_station_summary`, `get_anomalies`, `compare_station
 4. Move to the next module.
 
 M01 is the **reference implementation** — all tests already pass.
-M02–M12 are in the **red phase** — stubs raise `NotImplementedError`.
+M02–M15 are in the **red phase** — stubs raise `NotImplementedError`.

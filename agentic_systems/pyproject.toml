@@ -42,6 +42,9 @@ testpaths = [
     "M10_streamlit_session_state/tests",
     "M11_two_phase_submit/tests",
     "M12_testing_patterns/tests",
+    "M13_durable_execution/tests",
+    "M14_custom_checkpointer/tests",
+    "M15_graph_factory/tests",
 ]
 
 [tool.ruff]
